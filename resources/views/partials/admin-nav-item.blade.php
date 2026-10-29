@@ -1,0 +1,1 @@
+<li><a class="side-link" href="{{ route($routeName) }}" @if($active) aria-current="page" @endif><x-icon :name="$icon" /><span>{{ $label }}</span>@if($count)<span class="side-count" aria-label="{{ $count }} {{ $countLabel }}">{{ $count }}</span>@endif</a></li>
