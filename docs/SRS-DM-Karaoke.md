@@ -51,7 +51,7 @@ Dokumen ini menetapkan kebutuhan perangkat lunak website DM Karaoke & Cafe sebag
 
 - Semua paket berdurasi room 3 jam.
 - Isi paket Standard dan VIP masih placeholder sampai pemilik memberi daftar final.
-- Nominal deposit belum ditetapkan; tersedia pengaturan `deposit` yang bisa dikosongkan.
+- Nominal deposit: Rp 500.000 (ditetapkan client 30 Okt 2026), disimpan di pengaturan `deposit` dan bisa diubah admin.
 - Promo "bayar X dari Y jam" berlaku sekali per transaksi dan menggratiskan jam berbayar termurah.
 
 ## 3. Kebutuhan fungsional
@@ -106,7 +106,7 @@ Prioritas: **W** = wajib rilis 1, **P** = penting rilis 2, **O** = opsional.
 | FR-ADM-10 | CRUD tipe ruangan: nama, deskripsi, fasilitas, foto, kapasitas, tampil-kapasitas, bisa-disewa, tarif siang, tarif malam, jumlah unit | W |
 | FR-ADM-11 | CRUD paket: tipe, merek, nama, harga, durasi, isi, jam mulai khusus, tanda family, aktif | W |
 | FR-ADM-12 | CRUD promo: nama, deskripsi, jenis (persen, nominal, bayar X dari Y jam), target (sewa per tipe dan/atau paket tertentu), periode, jam berlaku opsional, sakelar aktif; pratinjau perhitungan | W |
-| FR-ADM-13 | Validasi promo: tidak boleh ada dua promo aktif yang beririsan (periode dan jam) pada target yang sama; jenis bayar X dari Y hanya untuk sewa saja | W |
+| FR-ADM-13 | Validasi promo: tidak boleh ada dua promo aktif yang beririsan (periode dan jam) pada target yang sama; jenis bayar X dari Y untuk sewa dan paket berdurasi minimal X jam (bukan Paket Family/Master Room) — revisi 30 Okt 2026 | W |
 | FR-ADM-14 | CRUD event dan galeri dengan unggah gambar, kompresi, dan status terbit | P |
 | FR-ADM-15 | Kotak masuk pesan: tandai dibaca, balas lewat tautan WhatsApp, hapus | P |
 | FR-ADM-16 | Pengguna: tambah, ubah peran, nonaktifkan, atur ulang kata sandi (Super Admin) | W |
@@ -158,7 +158,7 @@ Contoh: VIP 18.00 sampai 21.00 tanpa LC = 60.000 + 2 × 120.000 = **300.000**. D
 
 ### 4.4 Paket
 
-- Harga tetap per paket; `base = price`. Durasi = `hours` (3 jam).
+- Harga tetap per paket; `base = price`. Durasi = `hours` (2 atau 3 jam sesuai price list, lihat `CoreSeeder::packages()`).
 - Paket Family (Fun Package 115.000 di Standard, Baddas Package 165.000 di VIP) hanya boleh mulai 15.00 (`startHour`).
 - Reservasi paket menyimpan `pkgId`; LC pada paket bersifat bawaan paket dan tidak mengubah harga.
 
@@ -170,12 +170,12 @@ Contoh: VIP 18.00 sampai 21.00 tanpa LC = 60.000 + 2 × 120.000 = **300.000**. D
 ### 4.6 Promo
 
 1. **Satu promo per transaksi.** `pickPromo` memilih promo yang cocok target dan tanggalnya; bila beberapa, utamakan yang jendela jamnya memuat jam mulai.
-2. **Jenis.** `persen` (1 sampai 100), `nominal` (rupiah per transaksi), `bayar_x` (bayar Y dari X jam; hanya sewa saja).
+2. **Jenis.** `persen` (1 sampai 100), `nominal` (rupiah per transaksi), `bayar_x` (bayar Y dari X jam; sewa, atau paket berdurasi minimal X jam).
 3. **Target.** Kunci `rent:<typeId>` atau `pkg:<pkgId>`.
 4. **Jadwal.** `dateStart` sampai `dateEnd` dan opsional `timeStart` sampai `timeEnd` (jam operasional), ditambah sakelar `active`.
 5. **Jam yang didiskon.** Untuk sewa saja hanya jam di dalam jendela yang terkena diskon. Untuk paket, promo berlaku bila jam mulai berada di dalam jendela.
 6. **Basis.** Diskon dihitung dari total ruangan setelah tarif siang atau malam.
-7. **bayar_x.** Hanya jam berbayar (`rate > 0`) yang dihitung; butuh minimal X jam berbayar. Diskon = jumlah (X − Y) jam berbayar termurah. Jam gratis karena LC tidak dihitung, sehingga VIP 18.00 sampai 21.00 dengan LC tidak mendapat promo ini.
+7. **bayar_x.** Hanya jam berbayar (`rate > 0`) yang dihitung; butuh minimal X jam berbayar. Diskon = jumlah (X − Y) jam berbayar termurah. Jam gratis karena LC tidak dihitung, sehingga VIP 18.00 sampai 21.00 dengan LC tidak mendapat promo ini. **Paket (revisi 30 Okt 2026):** berlaku bila paket minimal X jam, bukan Paket Family (room sudah gratis) atau tipe khusus paket (Master), dan minimal X jam paket masuk jam berlaku promo. Jam paket dinilai dengan tarif sewa per jam tanpa LC; diskon = (X − Y) jam termurah, maksimal harga paket. Minuman dan LC tidak dipotong.
 8. **Validasi simpan.** Tolak promo aktif bila beririsan (tanggal dan jam) dengan promo aktif lain pada target yang sama.
 9. `total = max(0, base - discount)`.
 
@@ -348,7 +348,7 @@ Uji unit untuk `PricingService` memakai kasus berikut; semuanya harus lulus.
 
 **Pertanyaan terbuka yang memengaruhi dokumen ini**
 
-1. Isi final paket Standard dan VIP (kini placeholder).
-2. Nominal deposit.
+1. ~~Isi final paket Standard dan VIP.~~ Terjawab 30 Okt 2026: isi dan durasi paket dari price list client, data di `CoreSeeder::packages()`.
+2. ~~Nominal deposit.~~ Terjawab 30 Okt 2026: Rp 500.000.
 3. Konfirmasi semantik promo bayar X dari Y (sekali per transaksi, jam berbayar termurah, LC tidak dihitung).
 4. Pilihan gateway WhatsApp.

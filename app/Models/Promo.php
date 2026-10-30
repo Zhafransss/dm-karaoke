@@ -71,6 +71,36 @@ class Promo extends Model
         return ! $this->hasWindow() || ($h >= $this->time_start && $h < $this->time_end);
     }
 
+    /**
+     * Can this promo target the package at all? "Bayar X" needs a package of at least X hours
+     * whose room has an hourly rate: not Family (room already free) and not package-only types.
+     */
+    public function packageEligible(Package $pkg): bool
+    {
+        return $this->kind !== 'bayar_x'
+            || (! $pkg->family && (bool) $pkg->roomType?->rentable && $pkg->hours >= $this->x);
+    }
+
+    /**
+     * Does the promo discount this package when it starts at $startHour?
+     * % / nominal: the start hour is inside the window. "Bayar X": at least X package hours inside it.
+     */
+    public function appliesToPackage(Package $pkg, int $startHour): bool
+    {
+        if ($this->kind !== 'bayar_x') {
+            return $this->inWindow($startHour);
+        }
+        if (! $this->packageEligible($pkg)) {
+            return false;
+        }
+        $inside = 0;
+        for ($i = 0; $i < $pkg->hours; $i++) {
+            $inside += (int) $this->inWindow($startHour + $i);
+        }
+
+        return $inside >= $this->x;
+    }
+
     /** nonaktif | berakhir | terjadwal | berjalan */
     public function state(?string $ref = null): string
     {
@@ -98,6 +128,14 @@ class Promo extends Model
         };
     }
 
+    /** "Sewa Standard Room, Sewa VIP Room" — long lists are shortened to "A, B +3 lainnya". */
+    public function targetSummary(array $labels): string
+    {
+        $names = collect($this->targets())->map(fn ($k) => $labels[$k] ?? null)->filter()->values();
+
+        return $names->count() > 3 ? $names->take(2)->join(', ').' +'.($names->count() - 2).' lainnya' : $names->join(', ');
+    }
+
     public function windowLabel(): string
     {
         return $this->hasWindow() ? OpHours::label($this->time_start).'–'.OpHours::label($this->time_end) : '';
@@ -117,7 +155,12 @@ class Promo extends Model
         $hasRent = collect($targets)->contains(fn ($t) => str_starts_with($t, 'rent:'));
 
         if ($this->kind === 'bayar_x') {
-            return "Sewa ruangan {$this->x} jam, cukup bayar {$this->y} jam. Satu kali per transaksi".($w ? ", untuk jam {$w}" : '').'.';
+            $rule = "Sewa ruangan {$this->x} jam, cukup bayar {$this->y} jam.";
+            if ($hasPkg) {
+                $rule = ($hasRent ? $rule.' Untuk paket' : 'Paket').' minimal '.$this->x.' jam: '.($this->x - $this->y).' jam room gratis senilai tarif sewa per jam.';
+            }
+
+            return $rule.' Satu kali per transaksi'.($w ? ", untuk jam {$w}" : '').'.';
         }
         $base = $this->kind === 'persen' ? 'Diskon dihitung dari harga' : 'Potongan sekali per transaksi dari harga';
         $what = $hasRent && $hasPkg ? 'sewa ruangan atau paket' : ($hasPkg ? 'paket' : 'sewa ruangan');

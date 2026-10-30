@@ -54,7 +54,7 @@
     @continue($ps->isEmpty())
     <section class="band {{ $i % 2 ? '' : 'band-alt' }}" aria-labelledby="hg-{{ $t->id }}"><div class="wrap">
         <x-heading eyebrow="Paket" :title="e($t->name)" id="hg-{{ $t->id }}"
-            :lead="$t->rentable ? 'Setiap paket sudah termasuk '.$ps->first()->hours.' jam room.'.($t->publicCap() ? ' Kapasitas maksimal '.$t->publicCap().' orang.' : '') : 'Hanya tersedia dalam bentuk paket. Setiap paket termasuk 3 jam room, 3 LC, 3 Le Minerale, 2 Hexos, food platter, dan tissue.'" />
+            :lead="$t->rentable ? 'Setiap paket sudah termasuk room '.$ps->pluck('hours')->unique()->sort()->implode(' atau ').' jam sesuai paket.'.($t->publicCap() ? ' Kapasitas maksimal '.$t->publicCap().' orang.' : '') : 'Hanya tersedia dalam bentuk paket. Setiap paket termasuk 3 jam room, 3 LC, 3 Le Minerale, 2 Hexos, food platter, dan tissue.'" />
         @foreach($ps->groupBy('brand') as $brand => $list)
             <div class="{{ $loop->first ? '' : 'mt-12' }}">
                 <h3 class="m-0 mb-4 font-display text-[28px] leading-8 font-semibold text-gold">{{ $brand }}</h3>

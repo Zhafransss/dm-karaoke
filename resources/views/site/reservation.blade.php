@@ -7,6 +7,7 @@
 @php
     use App\Support\OpHours;
     $open = OpHours::open(); $dayEnd = OpHours::dayEnd(); $close = OpHours::close();
+    $deposit = trim((string) \App\Support\Settings::get('deposit'));
     $limit = config('dmk.rate_limit.reservations_per_hour');
 @endphp
 
@@ -39,7 +40,7 @@
             {{-- Step 2: availability grid (FR-RES-03) --}}
             <section aria-labelledby="st2">
                 <h2 class="step-title" id="st2"><span class="step-num">2</span>Pilih ruangan dan jam</h2>
-                <p class="-mt-2 mb-4 text-sm leading-[22px] text-ink-muted">Ketuk jam yang tersedia. Angka menunjukkan jumlah ruang yang masih kosong di jam itu. Buka sampai {{ hl($close) }} (jam setelah tengah malam ditandai "dini hari").</p>
+                <p class="-mt-2 mb-4 text-sm leading-[22px] text-ink-muted">Ketuk jam yang tersedia. Jam yang penuh tidak bisa dipesan. Buka sampai {{ hl($close) }} (jam setelah tengah malam ditandai "dini hari").</p>
                 <div class="avail-wrap" :class="loading && 'opacity-60'" aria-live="polite">
                     <div class="grid min-w-max" :style="`grid-template-columns: 148px repeat(${grid[0]?.cells.length || 1}, 78px)`" x-show="grid.length">
                         <div class="avail-h !text-left !pl-3.5 sticky left-0 z-[2] bg-surface">Ruangan</div>
@@ -51,14 +52,14 @@
                                 <div class="avail-label"><span x-text="row.name"></span><small class="text-ink-subtle font-normal text-xs mt-0.5" x-text="row.sub"></small></div>
                                 <template x-for="c in row.cells" :key="row.id + '-' + c.hour">
                                     <button type="button" class="slot"
-                                        :class="{ past: c.past, full: !c.past && c.free === 0, sel: isSel(row.id, c.hour), promo: c.promo }"
-                                        :disabled="c.past || c.free === 0"
+                                        :class="{ past: c.past, full: !c.past && !c.open, sel: isSel(row.id, c.hour), promo: c.promo }"
+                                        :disabled="c.past || !c.open"
                                         :aria-pressed="isSel(row.id, c.hour).toString()"
-                                        :aria-label="`${row.name} ${c.label}: ${c.past ? 'sudah lewat' : (c.free === 0 ? 'penuh' : c.free + ' dari ' + row.total + ' ruang tersedia' + (c.promo ? ', ada promo' : ''))}`"
+                                        :aria-label="`${row.name} ${c.label}: ${c.past ? 'sudah lewat' : (!c.open ? 'penuh' : 'tersedia' + (c.promo ? ', ada promo' : ''))}`"
                                         @click="pickSlot(row.id, c.hour)">
                                         <template x-if="c.past"><span>Lewat</span></template>
-                                        <template x-if="!c.past && c.free === 0"><span>Penuh</span></template>
-                                        <template x-if="!c.past && c.free > 0"><span>Tersedia<small class="block" x-text="(c.promo ? 'Promo · ' : '') + c.free + '/' + row.total"></small></span></template>
+                                        <template x-if="!c.past && !c.open"><span>Penuh</span></template>
+                                        <template x-if="!c.past && c.open"><span>Tersedia<small class="block" x-show="c.promo">Promo</small></span></template>
                                     </button>
                                 </template>
                             </div>
@@ -69,7 +70,34 @@
                 <div class="legend">
                     <span><i class="bg-surface-raised border-gold-deep"></i>Tersedia</span><span><i class="bg-gold border-gold"></i>Pilihanmu</span>
                     <span><i class="bg-danger-soft border-danger-soft"></i>Penuh</span><span><i class="border-dashed border-line-strong"></i>Sudah lewat</span>
-                    <span class="text-gold">Teks emas: jam promo</span>
+                    <span class="text-gold">Teks emas: ada promo untuk pilihanmu</span>
+                </div>
+
+                <div class="mt-8" aria-live="polite" x-show="grid.length" x-cloak>
+                    <h3 class="m-0 mb-1 font-display text-[24px] leading-7 font-semibold">Promo aktif di tanggal ini</h3>
+                    <p class="m-0 mb-3 caption" x-show="promos.length">Ketuk promo untuk memakainya, lalu tinggal pilih jam.</p>
+                    <p class="m-0 caption" x-show="!promos.length">Tidak ada promo yang berlaku di tanggal ini.</p>
+                    <div class="flex flex-col gap-3" x-show="promos.length">
+                        <template x-for="p in promos" :key="p.id">
+                            <article class="grid gap-3 md:gap-6 md:grid-cols-[112px_minmax(0,1fr)] items-center p-4 bg-surface-raised border rounded-md cursor-pointer transition-colors hover:border-gold-deep" :class="promoFits(p) ? 'border-gold' : 'border-line'"
+                                role="button" tabindex="0" :aria-label="`Pakai promo ${p.name}`"
+                                @click="applyPromo(p)" @keydown.enter.prevent="applyPromo(p)" @keydown.space.prevent="applyPromo(p)">
+                                <div class="flex md:flex-col items-center md:justify-center gap-3 md:gap-1 md:w-[112px] md:h-24 px-4 py-3 md:p-1.5 bg-gold-soft border border-gold-deep rounded-sm text-center">
+                                    <b class="font-display text-[32px] leading-none text-gold font-semibold tabular" x-text="p.big"></b>
+                                    <span class="text-[10px] leading-[14px] tracking-[.12em] uppercase text-gold" x-text="p.unit"></span>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h4 class="m-0 font-display text-2xl leading-7 font-semibold text-ink" x-text="p.name"></h4>
+                                        <span class="badge badge-dot" :class="p.state === 'berjalan' ? 'badge-success' : 'badge-gold'" x-text="p.state === 'berjalan' ? 'Berjalan' : 'Terjadwal'"></span>
+                                        <span class="badge badge-gold" x-show="promoFits(p)">Berlaku untuk pilihanmu</span>
+                                    </div>
+                                    <p class="mt-1.5 mb-0 text-[13px] leading-5 text-ink-subtle" x-text="`${p.for} · ${p.period}`"></p>
+                                    <p class="mt-1 mb-0 text-sm leading-[22px] text-ink-muted" x-text="p.text"></p>
+                                </div>
+                            </article>
+                        </template>
+                    </div>
                 </div>
             </section>
         </div>
@@ -119,7 +147,7 @@
                     </div>
                     <div class="field sm:col-span-2" x-show="!pkg && type?.rentable">
                         <label class="check items-start" for="r-lc"><input type="checkbox" id="r-lc" name="lc" value="1" x-model="lc" class="mt-0.5"> <span>Dengan LC (pemandu lagu, 21+)</span></label>
-                        <span class="help" x-text="type ? `Siang {{ hl($open) }}–{{ hl($dayEnd) }}: ruangan gratis dengan LC dan deposit uang, atau Rp ${type.rateDay.toLocaleString('id-ID')}/jam tanpa LC. Malam tarif sama dengan atau tanpa LC.` : ''"></span>
+                        <span class="help" x-text="type ? `Siang {{ hl($open) }}–{{ hl($dayEnd) }}: dengan LC cukup deposit uang` + @js($deposit !== '' ? " {$deposit}" : '') + `, atau Rp ${type.rateDay.toLocaleString('id-ID')}/jam tanpa LC.` : ''"></span>
                     </div>
                     <div class="field sm:col-span-2">
                         <label class="label" for="r-name">Nama pemesan</label>

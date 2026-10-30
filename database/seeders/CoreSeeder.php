@@ -43,33 +43,59 @@ class CoreSeeder extends Seeder
             }
         }
 
-        // Contents of Standard/VIP packages other than Family are placeholders until the owner
-        // provides the final list (PRD §8 open question).
-        $room = 'Sewa ruangan 3 jam';
+        $types = ['standard-room' => $std, 'vip-room' => $vip, 'master-room' => $master];
         $sort = 0;
-        $add = function (RoomType $type, string $brand, array $names, array $pricesK, array $extra = []) use ($room, &$sort) {
-            foreach ($names as $i => $name) {
-                Package::create(array_merge([
-                    'room_type_id' => $type->id, 'brand' => $brand, 'name' => $name, 'price' => $pricesK[$i] * 1000,
-                    'hours' => 3, 'items' => [$room], 'family' => false, 'start_hour' => null, 'active' => true, 'sort' => ++$sort,
-                ], $extra));
-            }
-        };
-        $add($std, 'Paket Anggur DM', ['Paket Anggur DM 1', 'Paket Anggur DM 2', 'Paket Anggur DM 3'], [525, 885, 1310]);
-        $add($std, 'Paket Kawai DM', ['Paket Kawai DM I', 'Paket Kawai DM II', 'Paket Kawai DM III'], [540, 950, 1410]);
-        $add($vip, 'Kawai VIP DM', ['Kawai VIP DM I', 'Kawai VIP DM II', 'Kawai VIP DM III'], [640, 1030, 1510]);
-        $add($vip, 'Paket VIP Beer Anker', ['Paket VIP Beer Anker A', 'Paket VIP Beer Anker B', 'Paket VIP Beer Anker C'], [645, 985, 1450]);
-        $add($vip, 'Anggur VIP DM', ['Anggur VIP DM 1', 'Anggur VIP DM 2', 'Anggur VIP DM 3'], [610, 960, 1410]);
-        $add($master, 'Master Room', ['Iceland Vodka', 'Kawa Kawa', 'Anggur Beer', 'Vibe'], [2350, 2450, 2500, 2600],
-            ['items' => [$room, '3 LC (pemandu lagu)', '3 Le Minerale', '2 Hexos', 'Food platter', 'Tissue']]);
-        $add($std, 'Paket Family (siang)', ['Fun Package'], [115],
-            ['family' => true, 'start_hour' => 15, 'items' => [$room, '1 pitcher Teh Javana', '1 French Fries']]);
-        $add($vip, 'Paket Family (siang)', ['Baddas Package'], [165],
-            ['family' => true, 'start_hour' => 15, 'items' => [$room, '1 pitcher Teh Javana', '1 French Fries', '1 permen Hexos']]);
+        foreach (self::packages() as [$slug, $brand, $name, $priceK, $hours, $items, $extra]) {
+            Package::create(array_merge([
+                'room_type_id' => $types[$slug]->id, 'brand' => $brand, 'name' => $name, 'price' => $priceK * 1000,
+                'hours' => $hours, 'items' => $items, 'family' => false, 'start_hour' => null, 'active' => true, 'sort' => ++$sort,
+            ], $extra));
+        }
 
         User::create([
             'name' => 'Administrator', 'username' => 'admin', 'role' => 'super_admin', 'active' => true,
             'password' => env('SEED_ADMIN_PASSWORD', 'dmkaraoke'),
         ]);
+    }
+
+    /**
+     * Package catalogue from the owner's price list (received 30 Oct 2026).
+     * Rows: [room type slug, brand, name, price in thousands, hours, items, extra columns].
+     *
+     * @return array<int, array{0:string, 1:string, 2:string, 3:int, 4:int, 5:array<int, string>, 6:array<string, mixed>}>
+     */
+    public static function packages(): array
+    {
+        $water = fn (int $n) => "{$n} Botol Mineral Water + {$n} Hexos";
+        $leMin = fn (int $n) => "{$n} Le Minerale + {$n} Hexos";
+        $snack = '1 Porsi Snack (French Fries / Sosis / Nugget)';
+        $box = '1 Tissue (1 box)';
+        // Every Master Room package also includes these.
+        $master = ['3 Jam Room', '3 LC', '3 Le Minerale', '2 Hexos', 'Food Platter', 'Tissue'];
+        $family = ['family' => true, 'start_hour' => 15];
+
+        return [
+            ['standard-room', 'Paket Anggur DM', 'Anggur DM 1', 525, 2, ['1 Botol Minuman', $water(1), '1 LC (2 jam)', '2 Jam Room', $box], []],
+            ['standard-room', 'Paket Anggur DM', 'Anggur DM 2', 885, 2, ['2 Botol Minuman', $water(2), '2 LC (2 jam)', '2 Jam Room', $box], []],
+            ['standard-room', 'Paket Anggur DM', 'Anggur DM 3', 1310, 3, ['3 Botol Minuman', $water(2), '1 Porsi Makanan Ringan (Chicken Wing / Sosis / Dumpling)', '2 LC (3 jam)', '3 Jam Room', $box], []],
+            ['standard-room', 'Paket Kawai DM', 'Kawai DM I', 540, 2, ['1 Botol Minuman', $leMin(1), '1 LC (2 jam)', '2 Jam Room', $box], []],
+            ['standard-room', 'Paket Kawai DM', 'Kawai DM II', 950, 2, ['2 Botol Minuman', $leMin(2), $snack, '2 LC (2 jam)', '2 Jam Room', $box], []],
+            ['standard-room', 'Paket Kawai DM', 'Kawai DM III', 1410, 3, ['3 Botol Minuman', $leMin(2), $snack, '2 LC (3 jam)', '3 Jam Room', $box], []],
+            ['vip-room', 'Kawai VIP DM', 'Kawai VIP DM I', 640, 2, ['1 Botol Minuman', $leMin(1), '1 LC (2 jam)', '2 Jam Room', $box], []],
+            ['vip-room', 'Kawai VIP DM', 'Kawai VIP DM II', 1030, 2, ['2 Botol Minuman', $leMin(2), $snack, '2 LC (2 jam)', '2 Jam Room', $box], []],
+            ['vip-room', 'Kawai VIP DM', 'Kawai VIP DM III', 1510, 3, ['3 Botol Minuman', $leMin(2), $snack, '2 LC (3 jam)', '3 Jam Room', $box], []],
+            ['vip-room', 'Paket VIP Beer Anker', 'VIP A - BEER ANKER', 645, 2, ['2 Botol Minuman', $leMin(1), '1 LC (2 jam)', '2 Jam Room'], []],
+            ['vip-room', 'Paket VIP Beer Anker', 'VIP B - BEER ANKER', 985, 2, ['3 Botol Minuman', $leMin(2), $snack, '2 LC (2 jam)', '2 Jam Room'], []],
+            ['vip-room', 'Paket VIP Beer Anker', 'VIP C - BEER ANKER', 1450, 3, ['4 Botol Minuman', $leMin(2), $snack, '2 LC (3 jam)', '3 Jam Room'], []],
+            ['vip-room', 'Anggur VIP DM', 'Anggur VIP DM 1', 610, 2, ['1 Botol Minuman', $water(1), '1 LC (2 jam)', '2 Jam Room', '1 Tissue'], []],
+            ['vip-room', 'Anggur VIP DM', 'Anggur VIP DM 2', 960, 2, ['2 Botol Minuman', $water(2), '1 Porsi Makanan Ringan (Chicken Wing / Sosis / Dumpling / French Fries)', '2 LC (2 jam)', '2 Jam Room', '1 Tissue'], []],
+            ['vip-room', 'Anggur VIP DM', 'Anggur VIP DM 3', 1410, 3, ['3 Botol Minuman', '1 Porsi Makanan Ringan (Chicken Wing / Sosis / Dumpling / French Fries)', '2 LC (3 jam)', '3 Jam Room', '1 Tissue'], []],
+            ['master-room', 'Master Room', 'Paket Iceland Vodka', 2350, 3, ['1 Botol Minuman', '2 Green Sand', '2 Miso', ...$master], []],
+            ['master-room', 'Master Room', 'Paket Kawa Kawa', 2450, 3, ['4 Botol Minuman', ...$master], []],
+            ['master-room', 'Master Room', 'Paket Anggur Beer', 2500, 3, ['6 Botol Minuman', ...$master], []],
+            ['master-room', 'Master Room', 'Paket Vibe', 2600, 3, ['1 Botol Minuman', ...$master], []],
+            ['standard-room', 'Paket Family (siang)', 'Fun Package', 115, 3, ['Free Room 3 jam', '1 Pitcher Teh Javana', '1 Porsi French Fries'], $family],
+            ['vip-room', 'Paket Family (siang)', 'Baddas Package', 165, 3, ['Free Room 3 jam', '1 Pitcher Teh Javana', '1 Porsi French Fries', '1 Permen Hexos'], $family],
+        ];
     }
 }

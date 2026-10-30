@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Block;
 use App\Models\Package;
+use App\Models\Promo;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\RoomType;
@@ -174,10 +175,12 @@ class AvailabilityService
 
     /**
      * Availability grid for the public page: every active type × operational hour.
+     * Promo marks follow the guest's choice: with a package selected only that package's
+     * row shows promos that would discount it at that start hour; otherwise rental promos.
      *
      * @return array<int, array{type: RoomType, total:int, cells: array}>
      */
-    public function grid(string $date, PromoService $promos): array
+    public function grid(string $date, PromoService $promos, ?Package $pkg = null): array
     {
         $rows = [];
         foreach (RoomType::active()->get() as $type) {
@@ -185,7 +188,13 @@ class AvailabilityService
             if (! $total) {
                 continue;
             }
-            $typePromos = $type->rentable ? $promos->forTarget($type->rentKey(), $date) : collect();
+            if ($pkg) {
+                $typePromos = $type->id === $pkg->room_type_id ? $promos->forTarget($pkg->pkgKey(), $date) : collect();
+                $applies = fn (Promo $p, int $h) => $p->appliesToPackage($pkg, $h);
+            } else {
+                $typePromos = $type->rentable ? $promos->forTarget($type->rentKey(), $date) : collect();
+                $applies = fn (Promo $p, int $h) => $p->inWindow($h);
+            }
             $cells = [];
             foreach (OpHours::hours() as $h) {
                 $past = OpHours::isPast($date, $h);
@@ -195,7 +204,7 @@ class AvailabilityService
                     'early' => OpHours::isEarlyMorning($h),
                     'past' => $past,
                     'free' => $past ? 0 : $this->freeCount($type->id, $date, $h),
-                    'promo' => $typePromos->contains(fn ($p) => $p->inWindow($h)),
+                    'promo' => $typePromos->contains(fn ($p) => $applies($p, $h)),
                 ];
             }
             $rows[] = ['type' => $type, 'total' => $total, 'cells' => $cells];

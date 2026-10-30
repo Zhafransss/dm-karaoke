@@ -34,6 +34,8 @@ Alpine.data('reservationForm', (cfg) => ({
     types: cfg.types,
     grid: [],
     starts: [],
+    promos: [],
+    pendingPromo: null,
     quote: null,
     loading: false,
     error: cfg.error || '',
@@ -68,14 +70,50 @@ Alpine.data('reservationForm', (cfg) => ({
         return +this.typeId === +typeId && this.hour !== null && hour >= +this.hour && hour < +this.hour + this.effHours();
     },
     effHours() { return this.pkg ? this.pkg.hours : +this.hours; },
+    promoFits(p) { return p.targets.includes(this.pkg ? 'pkg:' + this.pkg.id : 'rent:' + this.typeId); },
+    /* Closest bookable choice for a promo: the current room first (current mode first), then rooms in order. */
+    promoTarget(p) {
+        if (this.promoFits(p)) return { typeId: +this.typeId, mode: String(this.mode) };
+        const rooms = [this.type, ...this.types.filter((t) => t.id !== +this.typeId)].filter(Boolean);
+        for (const t of rooms) {
+            const rent = t.rentable && p.targets.includes('rent:' + t.id) ? { typeId: t.id, mode: 'sewa' } : null;
+            const pk = t.packages.find((k) => p.targets.includes('pkg:' + k.id));
+            const pack = pk ? { typeId: t.id, mode: String(pk.id) } : null;
+            const pick = t.id === +this.typeId && this.pkg ? pack || rent : rent || pack;
+            if (pick) return pick;
+        }
+        return null;
+    },
+    /* Tapping a promo card switches room + choice to it; load() then jumps to its first promo hour. */
+    applyPromo(p) {
+        const t = this.promoTarget(p);
+        if (!t) return;
+        this.pendingPromo = p;
+        const same = +this.typeId === t.typeId && String(this.mode) === t.mode;
+        this.typeId = t.typeId;
+        this.mode = t.mode;
+        if (same) this.load();
+        document.getElementById('st2')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
     async load() {
         this.loading = true;
         try {
             const d = await getJson(cfg.urls.availability, { date: this.date, tipe: this.typeId, mode: this.mode });
             this.grid = d.grid;
             this.starts = d.starts;
+            this.promos = d.promos;
             const ok = this.starts.filter((s) => s.ok);
             if (this.hour === null || !ok.find((s) => s.hour === +this.hour)) this.hour = ok[0]?.hour ?? null;
+            if (this.pendingPromo) {
+                const p = this.pendingPromo;
+                this.pendingPromo = null;
+                const row = this.grid.find((r) => r.id === +this.typeId);
+                const promoHours = new Set((row?.cells || []).filter((c) => c.promo).map((c) => c.hour));
+                // "Sewa X bayar Y" on rental needs a start with room for X hours.
+                const start = ok.find((s) => promoHours.has(s.hour) && (this.pkg || !p.x || s.max >= p.x));
+                if (start) this.hour = start.hour;
+                if (p.x && !this.pkg) this.hours = Math.max(+this.hours, p.x);
+            }
             const max = this.startOpt?.max || 1;
             if (!this.pkg) this.hours = Math.max(1, Math.min(+this.hours || 2, max));
             await this.price();
@@ -127,26 +165,29 @@ Alpine.data('adminReservationForm', (cfg) => ({
     },
 }));
 
-/* Admin promo form: live example calculation and overlap warning (FR-ADM-12/13). */
+/*
+ * Admin promo form: live example calculation and overlap warning (FR-ADM-12/13).
+ * Uses $root, not $el: when a method runs from @click, $el is the clicked button, not the form.
+ */
 Alpine.data('promoForm', (cfg) => ({
     ...cfg.state,
     preview: '',
     conflicts: [],
     init() {
         this.$nextTick(() => this.refresh());
-        this.$el.addEventListener('change', () => this.$nextTick(() => this.refresh()));
-        this.$el.addEventListener('input', (e) => { if (e.target.type === 'number' || e.target.type === 'text') this.refresh(); });
+        this.$root.addEventListener('change', () => this.$nextTick(() => this.refresh()));
+        this.$root.addEventListener('input', (e) => { if (e.target.type === 'number' || e.target.type === 'text') this.refresh(); });
     },
     setAll(typeId, on) {
-        this.$el.querySelectorAll(`[data-type="${typeId}"] input[name="targets[]"]:not(:disabled)`).forEach((c) => { c.checked = on; });
+        this.$root.querySelectorAll(`[data-type="${typeId}"] input[name="targets[]"]:not(:disabled)`).forEach((c) => { c.checked = on; });
         this.refresh();
     },
     async refresh() {
-        const fd = new FormData(this.$el);
+        const fd = new FormData(this.$root);
         const body = Object.fromEntries([...fd.entries()].filter(([k]) => k !== 'targets[]' && k !== '_token' && k !== '_method'));
         body.targets = fd.getAll('targets[]');
         body.window = this.window;
-        body.active = this.$el.querySelector('[name="active"]')?.checked ?? false;
+        body.active = this.$root.querySelector('[name="active"]')?.checked ?? false;
         const { data } = await postJson(cfg.urls.preview, body);
         this.preview = data.preview || '';
         this.conflicts = data.conflicts || [];
@@ -161,6 +202,18 @@ Alpine.data('lightbox', (items) => ({
     open(i) { this.idx = i; this.$nextTick(() => this.$refs.close?.focus()); },
     close() { this.idx = null; },
     step(d) { this.idx = (this.idx + d + this.items.length) % this.items.length; },
+}));
+
+/* Open/close panel whose state survives reloads (e.g. after toggling a package). Closed by default. */
+Alpine.data('collapsible', (key) => ({
+    open: false,
+    init() {
+        try { this.open = localStorage.getItem('dmk.open.' + key) === '1'; } catch (e) { /* storage blocked: stay closed */ }
+    },
+    toggle() {
+        this.open = !this.open;
+        try { localStorage.setItem('dmk.open.' + key, this.open ? '1' : '0'); } catch (e) { /* not persisted */ }
+    },
 }));
 
 /* Replace a file input's preview image. */

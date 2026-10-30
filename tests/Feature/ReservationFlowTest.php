@@ -70,8 +70,62 @@ class ReservationFlowTest extends TestCase
         }
         $res = $this->getJson('/reservasi/ketersediaan?date='.self::DATE."&tipe={$this->std->id}&mode=sewa")->assertOk();
         $row = collect($res->json('grid'))->firstWhere('id', $this->std->id);
-        $this->assertSame(0, collect($row['cells'])->firstWhere('hour', 22)['free']);
+        $this->assertFalse(collect($row['cells'])->firstWhere('hour', 22)['open']);
+        $this->assertTrue(collect($row['cells'])->firstWhere('hour', 21)['open']);
         $this->assertSame(2, collect($res->json('starts'))->firstWhere('hour', 20)['max']);
+
+        // The full hour cannot be booked through the public form either.
+        $this->post('/reservasi', $this->payload(['room_type_id' => $this->std->id, 'start_hour' => 22, 'hours' => 1]))
+            ->assertSessionHasErrors('booking');
+    }
+
+    public function test_t21b_public_grid_hides_unit_counts(): void
+    {
+        $this->book(['room_type_id' => $this->std->id, 'start_hour' => 20, 'hours' => 1]);
+        $res = $this->getJson('/reservasi/ketersediaan?date='.self::DATE."&tipe={$this->std->id}&mode=sewa")->assertOk();
+        $row = collect($res->json('grid'))->firstWhere('id', $this->std->id);
+
+        $this->assertArrayNotHasKey('total', $row);
+        $this->assertStringNotContainsString('ruang', $row['sub']);
+        $this->assertSame(['hour', 'label', 'early', 'past', 'open', 'promo'], array_keys($row['cells'][0]));
+    }
+
+    public function test_t21c_grid_promo_marks_follow_selected_package(): void
+    {
+        $kawai = $this->pkgNamed('Kawai VIP DM II');
+        $range = ['date_start' => '2026-11-01', 'date_end' => '2026-11-30'];
+        $this->promo(['name' => '3 bayar 2', 'kind' => 'bayar_x', 'x' => 3, 'y' => 2, ...$range], [$this->std->rentKey(), $this->vip->rentKey()]);
+        $this->promo(['name' => 'Paket Siang', 'kind' => 'persen', 'value' => 10, 'time_start' => 14, 'time_end' => 17, ...$range], [$kawai->pkgKey()]);
+
+        $marks = function (string $mode, int $typeId) {
+            $grid = $this->getJson('/reservasi/ketersediaan?date='.self::DATE."&tipe={$typeId}&mode={$mode}")->assertOk()->json('grid');
+
+            return collect($grid)->mapWithKeys(fn ($r) => [$r['id'] => collect($r['cells'])->where('promo', true)->pluck('hour')->all()]);
+        };
+
+        // Rental: the rental promo shows on both rentable rows.
+        $rent = $marks('sewa', $this->vip->id);
+        $this->assertContains(20, $rent[$this->std->id]);
+        $this->assertContains(20, $rent[$this->vip->id]);
+
+        // Package: rental-only "bayar X" disappears; only the package's own promo, its row, its window.
+        $pkg = $marks((string) $kawai->id, $this->vip->id);
+        $this->assertSame([14, 15, 16], $pkg[$this->vip->id]);
+        $this->assertSame([], $pkg[$this->std->id]);
+        $this->assertSame([], $pkg[$this->master->id]);
+    }
+
+    public function test_t21d_grid_lists_promos_running_on_chosen_date(): void
+    {
+        $this->promo(['name' => 'Jalan', 'kind' => 'persen', 'value' => 10, 'date_start' => '2026-11-05', 'date_end' => '2026-11-15'], [$this->vip->rentKey()]);
+        $this->promo(['name' => 'Nanti', 'kind' => 'persen', 'value' => 10, 'date_start' => '2026-11-20', 'date_end' => '2026-11-25'], [$this->vip->rentKey()]);
+        $this->promo(['name' => 'Mati', 'kind' => 'persen', 'value' => 10, 'date_start' => '2026-11-05', 'date_end' => '2026-11-15', 'active' => false], [$this->std->rentKey()]);
+
+        $promos = $this->getJson('/reservasi/ketersediaan?date='.self::DATE."&tipe={$this->vip->id}&mode=sewa")->assertOk()->json('promos');
+
+        $this->assertSame(['Jalan'], array_column($promos, 'name'));
+        $this->assertSame([$this->vip->rentKey()], $promos[0]['targets']);
+        $this->assertSame('Sewa VIP Room', $promos[0]['for']);
     }
 
     public function test_t22_fourth_reservation_from_same_ip_is_rejected(): void
@@ -102,6 +156,21 @@ class ReservationFlowTest extends TestCase
         app(ReservationService::class)->changeStatus($last, 'dibatalkan', $admin);
         $this->assertDatabaseHas('reservation_logs', ['reservation_id' => $last->id, 'from_status' => 'menunggu', 'to_status' => 'dibatalkan', 'user_id' => $admin->id]);
         $this->assertInstanceOf(Reservation::class, $this->book(['name' => 'Pengganti']));
+    }
+
+    public function test_admin_pay_x_promo_accepts_only_packages_that_fit(): void
+    {
+        $admin = User::factory()->role('super_admin')->create();
+        $kawai = $this->pkgNamed('Kawai VIP DM II');
+        $fun = $this->pkgNamed('Fun Package');
+        $form = ['name' => '2 bayar 1', 'kind' => 'bayar_x', 'x' => 2, 'y' => 1, 'date_start' => '2026-11-01', 'date_end' => '2026-11-30', 'active' => 1];
+
+        $this->actingAs($admin)->post('/admin/promo', [...$form, 'targets' => [$this->vip->rentKey(), $fun->pkgKey()]])
+            ->assertSessionHasErrors('targets');
+
+        $this->actingAs($admin)->post('/admin/promo', [...$form, 'targets' => [$this->vip->rentKey(), $kawai->pkgKey()]])
+            ->assertRedirect('/admin/promo');
+        $this->assertEqualsCanonicalizing([$this->vip->rentKey(), $kawai->pkgKey()], \App\Models\Promo::firstOrFail()->targets());
     }
 
     public function test_t25_role_without_permission_gets_403(): void

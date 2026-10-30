@@ -121,6 +121,46 @@ class PricingServiceTest extends TestCase
         $this->assertSame(240000, $q['total']);
     }
 
+    public function test_t11b_pay_x_on_package_frees_room_hours_at_hourly_rate(): void
+    {
+        $two = $this->pkg($this->std, 'Anggur Uji', 525000, ['hours' => 2]);
+        $kawai = $this->pkgNamed('Kawai VIP DM II'); // 3 hours, VIP
+        $range = ['date_start' => '2026-11-01', 'date_end' => '2026-11-30'];
+        $this->promo(['name' => '2 bayar 1', 'kind' => 'bayar_x', 'x' => 2, 'y' => 1, ...$range], [$two->pkgKey(), $kawai->pkgKey()]);
+
+        // Day hours are valued at the rate without LC (LC is part of the package).
+        $q = $this->price($this->std, $two, 16, 2);
+        $this->assertSame(40000, $q['discount']);
+        $this->assertSame(485000, $q['total']);
+        $this->assertSame('2 jam bayar 1 jam', $q['promo_note']);
+        $this->assertSame(40000, $this->price($this->std, $two, 18, 2)['discount']); // 18 day + 19 night: cheapest is free
+        $this->assertSame(80000, $this->price($this->std, $two, 20, 2)['discount']);
+        // A 3-hour package still gets one free hour (once per transaction).
+        $this->assertSame(120000, $this->price($this->vip, $kawai, 20, 3)['discount']);
+    }
+
+    public function test_t11c_pay_x_skips_packages_that_do_not_fit(): void
+    {
+        $two = $this->pkg($this->std, 'Anggur Uji', 525000, ['hours' => 2]);
+        $fun = $this->pkgNamed('Fun Package');
+        $vibe = $this->pkgNamed('Vibe');
+        $range = ['date_start' => '2026-11-01', 'date_end' => '2026-11-30'];
+
+        // Shorter than X.
+        $three = $this->promo(['name' => '3 bayar 2', 'kind' => 'bayar_x', 'x' => 3, 'y' => 2, ...$range], [$two->pkgKey()]);
+        $this->assertNull($this->price($this->std, $two, 20, 2)['promo_id']);
+        $three->delete();
+
+        // Not enough package hours inside the window (only 15.00 of 15.00–17.00 is inside 14–16).
+        $p = $this->promo(['name' => '2 bayar 1', 'kind' => 'bayar_x', 'x' => 2, 'y' => 1, 'time_start' => 14, 'time_end' => 16, ...$range], [$two->pkgKey()]);
+        $this->assertNull($this->price($this->std, $two, 15, 2)['promo_id']);
+        $this->assertSame(40000, $this->price($this->std, $two, 14, 2)['discount']);
+
+        // Family (room already free) and package-only Master Room never qualify.
+        $this->assertFalse($p->packageEligible($fun));
+        $this->assertFalse($p->packageEligible($vibe));
+    }
+
     public function test_t12_pay_x_does_not_count_lc_free_hours(): void
     {
         $this->promo(['name' => '3 bayar 2', 'kind' => 'bayar_x', 'x' => 3, 'y' => 2, 'date_start' => '2026-11-01', 'date_end' => '2026-11-30'], [$this->vip->rentKey()]);

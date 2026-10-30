@@ -121,8 +121,10 @@ class PromoController extends Controller
             'date_end.after_or_equal' => 'Tanggal berakhir tidak boleh sebelum tanggal mulai.', 'time_end.gt' => 'Jam selesai harus setelah jam mulai.',
         ]);
         $p = $this->fromRequest($request, $promo);
-        if ($p->kind === 'bayar_x' && collect($p->targets())->contains(fn ($t) => str_starts_with($t, 'pkg:'))) {
-            throw ValidationException::withMessages(['targets' => 'Promo bayar sebagian jam hanya untuk sewa ruangan, bukan paket.']);
+        $pkgIds = collect($p->targets())->filter(fn ($t) => str_starts_with($t, 'pkg:'))->map(fn ($t) => (int) substr($t, 4));
+        $invalid = Package::with('roomType')->whereIn('id', $pkgIds)->get()->reject(fn (Package $pk) => $p->packageEligible($pk));
+        if ($invalid->isNotEmpty()) {
+            throw ValidationException::withMessages(['targets' => "Promo bayar {$p->x} jam hanya untuk paket minimal {$p->x} jam (bukan Paket Family atau Master Room). Lepas centang: ".$invalid->pluck('name')->join(', ').'.']);
         }
         $conflicts = $this->promos->conflicts($p);
         if ($conflicts->isNotEmpty()) {
@@ -155,7 +157,7 @@ class PromoController extends Controller
             'active' => $request->boolean('active'),
         ]);
         $targets = array_values(array_filter((array) $request->input('targets', []), fn ($t) => is_string($t)));
-        $p->pendingTargets = $kind === 'bayar_x' ? array_values(array_filter($targets, fn ($t) => str_starts_with($t, 'rent:'))) : $targets;
+        $p->pendingTargets = $targets;
 
         return $p;
     }

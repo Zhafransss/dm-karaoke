@@ -5,10 +5,16 @@
 @endsection
 
 @section('content')
-<p class="notice notice-info">Harga paket tetap, tidak ikut tarif siang atau malam. Paket Family memakai jam mulai khusus. Isi minuman dan makanan paket Standard dan VIP masih sementara, lengkapi lewat tombol ubah.</p>
+<p class="notice notice-info">Harga paket tetap, tidak ikut tarif siang atau malam. Paket Family memakai jam mulai khusus. Klik nama ruangan untuk membuka atau menutup daftar paketnya.</p>
 @foreach($types as $t)
-    <section class="card">
-        <h2>{{ $t->name }} <span class="caption">{{ $t->packages->count() }} paket</span></h2>
+    <section class="card" x-data="collapsible('pkg-room-{{ $t->id }}')">
+        <h2 class="!mb-0">
+            <button type="button" class="flex w-full flex-wrap items-center justify-between gap-3 text-left" @click="toggle()" :aria-expanded="open.toString()" aria-controls="pkg-room-{{ $t->id }}">
+                <span class="inline-flex items-center gap-3"><x-icon name="right" class="ic-sm text-gold transition-transform" ::class="open && 'rotate-90'" />{{ $t->name }}</span>
+                <span class="caption">{{ $t->packages->count() }} paket · {{ $t->packages->where('active', true)->count() }} aktif @if($t->packages->isNotEmpty())· {{ rp($t->packages->min('price')) }}–{{ rp($t->packages->max('price')) }}@endif</span>
+            </button>
+        </h2>
+        <div id="pkg-room-{{ $t->id }}" class="mt-4" x-show="open" x-cloak>
         @forelse($t->packages->groupBy('brand') as $brand => $list)
             <div class="{{ $loop->first ? '' : 'mt-6' }}">
                 <h3 class="m-0 mb-3 font-display text-[22px] leading-[26px] font-semibold text-gold">{{ $brand }}</h3>
@@ -34,6 +40,7 @@
         @empty
             <p class="empty-sm">Belum ada paket untuk ruangan ini. <a href="{{ route('admin.paket.create', ['tipe' => $t->id]) }}">Tambah paket</a></p>
         @endforelse
+        </div>
     </section>
 @endforeach
 @endsection

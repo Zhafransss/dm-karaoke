@@ -4,8 +4,7 @@
     $labels = $labels ?: app(\App\Services\PromoService::class)->targetLabels();
     $state = $p->state();
     [$big, $unit] = $p->figure();
-    $targetNames = collect($p->targets())->map(fn ($k) => $labels[$k] ?? null)->filter()->values();
-    $rooms = $targetNames->count() > 3 ? $targetNames->take(2)->join(', ').' +'.($targetNames->count() - 2).' lainnya' : $targetNames->join(', ');
+    $rooms = $p->targetSummary($labels);
     // Book button: first target decides type and mode.
     $first = $p->targets()[0] ?? null;
     $book = route('reservasi');

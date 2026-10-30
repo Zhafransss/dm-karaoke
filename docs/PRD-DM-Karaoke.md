@@ -136,7 +136,7 @@ Target angka belum ditetapkan pemilik; kolom target diisi setelah ada data awal.
 
 **Pertanyaan terbuka**
 
-- [ ] Berapa nominal deposit yang ditampilkan di website?
+- [x] Berapa nominal deposit yang ditampilkan di website? Rp 500.000 (30 Okt 2026).
 - [ ] Isi lengkap setiap paket Standard dan VIP (minuman, makanan, durasi).
 - [ ] Gateway WhatsApp mana yang dipakai (Fonnte, Wablas, StarSender, Watzap)?
 - [ ] Target angka untuk metrik keberhasilan.

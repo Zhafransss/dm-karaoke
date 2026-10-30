@@ -100,7 +100,7 @@ return [
         'close' => 28,
         'day_end' => 19,
         'max_days' => 30,
-        'deposit' => '',
+        'deposit' => 'Rp 500.000',
         'wa_display' => '0822-2041-3723',
         'wa_number' => '6282220413723',
         'wa_admin' => '082220413723',

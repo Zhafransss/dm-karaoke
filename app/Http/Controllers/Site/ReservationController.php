@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
 use App\Models\Package;
+use App\Models\Promo;
 use App\Models\Reservation;
 use App\Models\RoomType;
 use App\Services\AvailabilityService;
@@ -85,12 +86,15 @@ class ReservationController extends Controller
         $type = RoomType::where('active', true)->find($request->integer('tipe'));
         $pkg = $type && $request->query('mode') !== 'sewa' ? $type->activePackages()->find($request->integer('mode')) : null;
 
-        $grid = collect($this->availability->grid($date, $promos))->map(fn ($row) => [
+        // Guests only see whether a slot is bookable, never how many units are left or exist.
+        $grid = collect($this->availability->grid($date, $promos, $pkg))->map(fn ($row) => [
             'id' => $row['type']->id,
             'name' => $row['type']->name,
-            'sub' => $row['total'].' ruang · '.($row['type']->rentable ? rpk($row['type']->rate_day).'–'.rpk($row['type']->rate_night).'/jam' : 'paket'),
-            'total' => $row['total'],
-            'cells' => $row['cells'],
+            'sub' => $row['type']->rentable ? rpk($row['type']->rate_day).'–'.rpk($row['type']->rate_night).'/jam' : 'paket',
+            'cells' => array_map(fn ($c) => [
+                'hour' => $c['hour'], 'label' => $c['label'], 'early' => $c['early'], 'past' => $c['past'],
+                'open' => $c['free'] > 0, 'promo' => $c['promo'],
+            ], $row['cells']),
         ]);
 
         $starts = [];
@@ -104,7 +108,20 @@ class ReservationController extends Controller
             }
         }
 
-        return response()->json(['date' => $date, 'label' => tgl($date, 'day'), 'hours' => array_map('hl', OpHours::hours()), 'grid' => $grid, 'starts' => $starts]);
+        // Promos running on the chosen date, listed under the grid.
+        $labels = $promos->targetLabels();
+        $running = $promos->active()->filter(fn (Promo $p) => $p->ds() <= $date && $date <= $p->de())
+            ->sortBy(fn (Promo $p) => $p->de())->values()
+            ->map(function (Promo $p) use ($labels) {
+                [$big, $unit] = $p->figure();
+
+                return [
+                    'id' => $p->id, 'name' => $p->name, 'big' => $big, 'unit' => $unit, 'state' => $p->state(), 'x' => $p->kind === 'bayar_x' ? $p->x : null,
+                    'text' => $p->description ?: $p->ruleText(), 'period' => $p->periodLabel(), 'for' => $p->targetSummary($labels), 'targets' => $p->targets(),
+                ];
+            });
+
+        return response()->json(['date' => $date, 'label' => tgl($date, 'day'), 'hours' => array_map('hl', OpHours::hours()), 'grid' => $grid, 'starts' => $starts, 'promos' => $running]);
     }
 
     /** Live price, computed by the same service that stores the reservation (T-28). */

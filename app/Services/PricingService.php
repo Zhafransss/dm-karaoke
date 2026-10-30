@@ -52,7 +52,7 @@ class PricingService
         }
 
         $promo = $forced ?? $this->promos->pick($pkg ? $pkg->pkgKey() : $type->rentKey(), $date, $hour, $hours);
-        [$discount, $eligible, $note] = $promo ? $this->discount($promo, $pkg, $perHour, $hour, $hours) : [0, 0, ''];
+        [$discount, $eligible, $note] = $promo ? $this->discount($promo, $type, $pkg, $perHour, $hour, $hours) : [0, 0, ''];
         $used = $promo && $discount > 0;
 
         return [
@@ -83,17 +83,28 @@ class PricingService
     }
 
     /** @return array{0:int,1:int,2:string} discount, eligible hours, note */
-    private function discount(Promo $p, ?Package $pkg, array $perHour, int $hour, int $hours): array
+    private function discount(Promo $p, RoomType $type, ?Package $pkg, array $perHour, int $hour, int $hours): array
     {
         if ($pkg) {
-            // Package promos apply when the package starts inside the promo window.
-            if (! $p->inWindow($hour)) {
+            if (! $p->appliesToPackage($pkg, $hour)) {
                 return [0, 0, ''];
+            }
+            if ($p->kind === 'bayar_x') {
+                // Free package hours are valued at the room's hourly rate without LC; drinks and LC keep their price.
+                $roomHours = [];
+                for ($i = 0; $i < $pkg->hours; $i++) {
+                    if ($p->inWindow($hour + $i)) {
+                        $roomHours[] = ['h' => $hour + $i, ...$this->hourRate($type, $hour + $i, false)];
+                    }
+                }
+                [$d, $n, $note] = $this->payX($p, $roomHours);
+
+                return [min($d, $pkg->price), $n, $note];
             }
             $d = match ($p->kind) {
                 'persen' => (int) round($pkg->price * $p->value / 100),
                 'nominal' => min($p->value, $pkg->price),
-                default => 0, // bayar_x is rental-only
+                default => 0,
             };
 
             return [$d, $pkg->hours, ''];

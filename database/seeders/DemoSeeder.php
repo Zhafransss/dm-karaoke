@@ -53,9 +53,9 @@ class DemoSeeder extends Seeder
             'kind' => 'bayar_x', 'x' => 3, 'y' => 2, 'date_start' => $d(-3), 'date_end' => $d(20)], [$std->rentKey(), $vip->rentKey()]);
         $promo(['name' => 'Diskon Paket Siang', 'description' => 'Diskon 10% untuk paket yang mulai di jam 14.00–17.00.',
             'kind' => 'persen', 'value' => 10, 'date_start' => $T, 'date_end' => $d(14), 'time_start' => 14, 'time_end' => 17],
-            ['pkg:'.$pkg('Paket Kawai DM II'), 'pkg:'.$pkg('Kawai VIP DM II'), 'pkg:'.$pkg('Paket Anggur DM 2')]);
+            ['pkg:'.$pkg('Kawai DM II'), 'pkg:'.$pkg('Kawai VIP DM II'), 'pkg:'.$pkg('Anggur DM 2')]);
         $promo(['name' => 'Potongan Master Room', 'description' => 'Potongan Rp 100.000 per transaksi untuk paket Vibe dan Kawa Kawa.',
-            'kind' => 'nominal', 'value' => 100000, 'date_start' => $T, 'date_end' => $d(30)], ['pkg:'.$pkg('Vibe'), 'pkg:'.$pkg('Kawa Kawa')]);
+            'kind' => 'nominal', 'value' => 100000, 'date_start' => $T, 'date_end' => $d(30)], ['pkg:'.$pkg('Paket Vibe'), 'pkg:'.$pkg('Paket Kawa Kawa')]);
         $promo(['name' => 'Promo Ulang Tahun', 'description' => 'Diskon untuk tamu yang berulang tahun (draf, belum diaktifkan).',
             'kind' => 'persen', 'value' => 15, 'date_start' => $T, 'date_end' => $d(30), 'active' => false], [$vip->rentKey()]);
         $promos->flush();
@@ -130,7 +130,7 @@ class DemoSeeder extends Seeder
         $res($vip, 'VIP 2', -1, 19, 3, 'Hendra W.', '085612340987', 8, 'tidak_datang', ['pkg' => 'Kawai VIP DM I']);
         $res($vip, 'VIP 1', 0, 14, 3, 'Keluarga Hartono', '081227788990', 9, 'dikonfirmasi', ['note' => 'Arisan keluarga']);
         $res($std, 'Standard 1', 0, 19, 2, 'Rina Putri', '081234567890', 5, 'dikonfirmasi');
-        $res($master, 'Master 1', 0, 20, 3, 'Sinta Amelia', '087812312312', 12, 'dikonfirmasi', ['pkg' => 'Vibe', 'note' => 'Ulang tahun, minta dekorasi balon']);
+        $res($master, 'Master 1', 0, 20, 3, 'Sinta Amelia', '087812312312', 12, 'dikonfirmasi', ['pkg' => 'Paket Vibe', 'note' => 'Ulang tahun, minta dekorasi balon']);
         $res($std, 'Standard 2', 0, 20, 3, 'Dimas Aditya', '085712345678', 6, 'menunggu', ['lc' => true]);
         $res($std, 'Standard 3', 0, 21, 2, 'Walk-in', '', 3, 'dikonfirmasi', ['source' => 'admin']);
         $res($std, 'Standard 1', 1, 15, 3, 'Nadia Salsabila', '082255556666', 4, 'menunggu', ['pkg' => 'Fun Package']);

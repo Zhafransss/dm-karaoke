@@ -12,7 +12,10 @@ class QuotePresenter
         foreach ($lines as $l) {
             $rows[] = $mode === 'paket'
                 ? ['text' => "{$l['label']} · {$l['hours']} jam", 'tag' => '', 'amount' => rp($l['sum']), 'discount' => false]
-                : ['text' => $l['hours'].' jam × '.($l['rate'] ? rp($l['rate']) : 'gratis'), 'tag' => $l['label'], 'amount' => $l['rate'] ? rp($l['sum']) : 'Gratis', 'discount' => false];
+                : ($l['rate']
+                    ? ['text' => $l['hours'].' jam × '.rp($l['rate']), 'tag' => $l['label'], 'amount' => rp($l['sum']), 'discount' => false]
+                    // Rate 0 only happens for daytime rental with LC: the room is covered by the deposit.
+                    : ['text' => $l['hours'].' jam dengan deposit', 'tag' => $l['label'], 'amount' => trim('Deposit '.self::deposit()), 'discount' => false]);
         }
         if ($promoName && $discount > 0) {
             $rows[] = ['text' => 'Promo '.$promoName.($promoNote ? " ({$promoNote})" : ''), 'tag' => '', 'amount' => '−'.rp($discount), 'discount' => true];
@@ -31,16 +34,21 @@ class QuotePresenter
             'total_raw' => $q['total'],
             'hours' => $q['hours'],
             'when' => tgl($date).' · '.OpHours::range($hour, $q['hours']).'. Dibayar di tempat.',
-            'lc_note' => $freeLc ? 'Ruangan gratis berlaku dengan LC dan deposit uang. '.self::depositText() : '',
+            'lc_note' => $freeLc ? self::depositText().' Deposit tidak termasuk total.' : '',
         ];
+    }
+
+    public static function deposit(): string
+    {
+        return trim((string) Settings::get('deposit'));
     }
 
     public static function depositText(): string
     {
-        $deposit = trim((string) Settings::get('deposit'));
+        $deposit = self::deposit();
 
         return $deposit !== ''
-            ? "Deposit berupa uang: {$deposit}, dibayar di tempat."
+            ? "Deposit {$deposit} berupa uang, dibayar di tempat."
             : 'Deposit berupa uang, dibayar di tempat. Besarnya diinformasikan admin saat konfirmasi.';
     }
 }

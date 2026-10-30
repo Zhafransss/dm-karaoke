@@ -1,7 +1,7 @@
 # RTM – Website DM Karaoke & Cafe
 
 Requirement Traceability Matrix. Sumber: `docs/PRD-DM-Karaoke.md` (tujuan bisnis) dan `docs/SRS-DM-Karaoke.md` (requirement).
-Terakhir diperbarui: 29 Oktober 2026 (sesi implementasi awal Laravel).
+Terakhir diperbarui: 30 Oktober 2026 (nominal deposit Rp 500.000; isi & durasi paket dari price list client).
 
 **Tujuan bisnis (PRD §1)**
 
@@ -29,7 +29,7 @@ Uji otomatis ada di `tests/Feature/PricingServiceTest.php` (T-01–T-15) dan `te
 | FR-PUB-08 | G3 | Kapasitas Master tidak tampil di publik | `RoomType::publicCap()` | W | Done | T-30 |
 | FR-RES-01 | G1 | Pilih tipe, tanggal, mode, jam, durasi, jumlah orang | `site.reservation` + Alpine | W | Done (UAT) | – |
 | FR-RES-02 | G1 | Mode default: sewa saja; Master langsung paket | `ReservationController@create` | W | Done (UAT) | – |
-| FR-RES-03 | G1, G2 | Grid ketersediaan, label "dini hari" | `AvailabilityService::grid` | W | Done | T-21 |
+| FR-RES-03 | G1, G2 | Grid ketersediaan, label "dini hari"; publik hanya melihat Tersedia/Penuh tanpa jumlah unit; penanda promo mengikuti pilihan (paket → hanya promo paket itu) (keputusan client 30 Okt 2026) ; daftar promo aktif di tanggal terpilih tampil di bawah grid | `AvailabilityService::grid`, `ReservationController@availability`, `Promo::appliesToPackageAt` | W | Done | T-21, T-21b, T-21c, T-21d |
 | FR-RES-04 | G2, G3 | Jam bulat, min 1 jam, ≤ jam tutup, aturan paket | `AvailabilityService::ruleError` | W | Done | T-08, T-21 |
 | FR-RES-05 | G2 | Batas kapasitas; Master batas teknis 30 | `RoomType::maxPax()` | W | Done | – |
 | FR-RES-06 | G3 | LC hanya centang, tidak mengubah total | `PricingService` | W | Done | T-02, T-04, T-05 |
@@ -53,7 +53,7 @@ Uji otomatis ada di `tests/Feature/PricingServiceTest.php` (T-01–T-15) dan `te
 | FR-ADM-10 | G3 | CRUD tipe ruangan, tarif, unit | `RoomTypeController` | W | Done (UAT) | – |
 | FR-ADM-11 | G3 | CRUD paket | `PackageController` | W | Done (UAT) | – |
 | FR-ADM-12 | G1, G3 | CRUD promo + pratinjau perhitungan | `PromoController` | W | Done (UAT) | T-10–T-15 |
-| FR-ADM-13 | G3 | Tolak promo beririsan; bayar X hanya sewa | `PromoService::conflicts` | W | Done | T-14 |
+| FR-ADM-13 | G3 | Tolak promo beririsan; bayar X untuk sewa + paket ≥ X jam, potongan senilai tarif sewa per jam (revisi scope 30 Okt 2026) | `PromoService::conflicts`, `Promo::packageEligible`, `PricingService::discount` | W | Done | T-14, T-11b, T-11c |
 | FR-ADM-14 | G4 | CRUD event & galeri, kompres gambar, status terbit | `EventController`, `GalleryController`, `ImageService` | P | Done (UAT) | – |
 | FR-ADM-15 | – | Kotak masuk pesan: baca, balas WA, hapus | `MessageController` | P | Done (UAT) | – |
 | FR-ADM-16 | – | Pengguna: tambah, peran, nonaktif, reset sandi | `UserController` | W | Done (UAT) | – |
@@ -92,6 +92,8 @@ Uji otomatis ada di `tests/Feature/PricingServiceTest.php` (T-01–T-15) dan `te
 | Dashboard | – | Untuk semua peran | Semua peran, widget sesuai hak akses |
 | WA saat konfirmasi | Kirim hanya saat reservasi masuk (mitigasi blokir) | FR-WA-04 otomatis | Otomatis, dengan sakelar di Pengaturan + tombol wa.me tetap ada |
 | Menu cafe di beranda prototype | Pemesanan F&B di luar cakupan | Tidak ada FR | Tidak dibuat (harga contoh berisiko selisih) |
+| Nominal deposit (30 Okt 2026) | Pertanyaan terbuka | Pertanyaan terbuka #2 | Rp 500.000, berlaku untuk sewa siang dengan LC; default di `config/dmk.php`, tetap bisa diubah di Pengaturan. Ringkasan harga menulis "Deposit Rp 500.000" (bukan "Gratis"), deposit tidak masuk total |
+| Isi & durasi paket (30 Okt 2026) | Pertanyaan terbuka | Pertanyaan terbuka #1, §4.4 "3 jam" | Ikut price list client: paket level 1–2 = 2 jam, level 3 / Master / Family = 3 jam. Nama paket disamakan dengan price list (mis. "Anggur DM 1", "VIP A", "Paket Vibe"); promo mengacu ke ID paket sehingga tidak terdampak. Data di `CoreSeeder::packages()` |
 
 ## Tambahan model data di luar SRS §5 (perlu dimasukkan ke SRS)
 

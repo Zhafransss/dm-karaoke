@@ -10,7 +10,7 @@
 @section('content')
 {{-- FR-ADM-12 / FR-ADM-13 --}}
 <form method="POST" action="{{ $p->exists ? route('admin.promo.update', $p) : route('admin.promo.store') }}" class="card grid gap-x-4 gap-y-6 md:grid-cols-2 max-w-[860px]"
-      x-data="promoForm(@js(['state' => ['kind' => $kind, 'window' => $window], 'urls' => ['preview' => route('admin.promo.preview')]]))">
+      x-data="promoForm(@js(['state' => ['kind' => $kind, 'window' => $window, 'x' => (int) old('x', $p->x ?? 3)], 'urls' => ['preview' => route('admin.promo.preview')]]))">
     @csrf
     @if($p->exists) @method('PUT') <input type="hidden" name="id" value="{{ $p->id }}"> @endif
     <div class="field md:col-span-2"><label class="label" for="p-name">Nama promo</label><input class="input" id="p-name" name="name" value="{{ old('name', $p->name) }}" placeholder="Contoh: Sewa 3 Jam Bayar 2 Jam" required maxlength="100"></div>
@@ -22,9 +22,9 @@
         <input class="input" id="p-value" name="value" type="number" min="1" value="{{ old('value', $p->value ?: '') }}" inputmode="numeric" :disabled="kind === 'bayar_x'">
         <span class="help" x-text="kind === 'persen' ? 'Persen dari harga yang kena promo (1–100).' : 'Rupiah, diberikan sekali per transaksi.'"></span>
     </div>
-    <div class="field" x-show="kind === 'bayar_x'" x-cloak><label class="label" for="p-x">Sewa (jam)</label><input class="input" id="p-x" name="x" type="number" min="2" max="12" value="{{ old('x', $p->x ?? 3) }}" :disabled="kind !== 'bayar_x'"></div>
+    <div class="field" x-show="kind === 'bayar_x'" x-cloak><label class="label" for="p-x">Sewa (jam)</label><input class="input" id="p-x" name="x" type="number" min="2" max="12" x-model.number="x" :disabled="kind !== 'bayar_x'"></div>
     <div class="field" x-show="kind === 'bayar_x'" x-cloak><label class="label" for="p-y">Bayar (jam)</label><input class="input" id="p-y" name="y" type="number" min="1" max="11" value="{{ old('y', $p->y ?? 2) }}" :disabled="kind !== 'bayar_x'">
-        <span class="help">Jam termurah yang dibayar penuh digratiskan, satu kali per transaksi. Hanya untuk sewa ruangan; jam gratis karena LC tidak dihitung.</span></div>
+        <span class="help">Jam termurah yang dibayar penuh digratiskan, satu kali per transaksi; jam gratis karena LC tidak dihitung. Untuk paket: hanya paket minimal sesuai jam sewa, potongannya senilai tarif sewa per jam (bukan Paket Family atau Master Room).</span></div>
 
     <fieldset class="field md:col-span-2 border-0 p-0 m-0 min-w-0">
         <legend class="label mb-2">Berlaku untuk</legend>
@@ -38,7 +38,9 @@
                             <label class="check !min-h-[34px] !px-3 !py-1.5 !text-[13px]"><input type="checkbox" name="targets[]" value="{{ $t->rentKey() }}" @checked(in_array($t->rentKey(), $targets))> Sewa ruangan saja</label>
                         @endif
                         @foreach($t->packages as $pk)
-                            <label class="check !min-h-[34px] !px-3 !py-1.5 !text-[13px] {{ $pk->active ? '' : 'dim' }}"><input type="checkbox" name="targets[]" value="{{ $pk->pkgKey() }}" @checked(in_array($pk->pkgKey(), $targets)) :disabled="kind === 'bayar_x'"> {{ $pk->name }}{{ $pk->active ? '' : ' (nonaktif)' }}</label>
+                            {{-- "Bayar X" only fits packages of >= X hours with an hourly room rate (mirrors Promo::packageEligible). --}}
+                            @php($payX = ! $pk->family && $t->rentable ? "x > {$pk->hours}" : 'true')
+                            <label class="check !min-h-[34px] !px-3 !py-1.5 !text-[13px] {{ $pk->active ? '' : 'dim' }}" :class="kind === 'bayar_x' && ({{ $payX }}) && 'dim'"><input type="checkbox" name="targets[]" value="{{ $pk->pkgKey() }}" @checked(in_array($pk->pkgKey(), $targets)) :disabled="kind === 'bayar_x' && ({{ $payX }})"> {{ $pk->name }} <span class="text-ink-subtle">· {{ $pk->hours }} jam</span>{{ $pk->active ? '' : ' (nonaktif)' }}</label>
                         @endforeach
                     </div>
                 </div>
