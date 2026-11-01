@@ -165,6 +165,25 @@ Alpine.data('adminReservationForm', (cfg) => ({
     },
 }));
 
+/* Admin "Pindah unit atau jam" (FR-ADM-09): marks units already taken at the chosen date/time as "(Dipakai)". */
+Alpine.data('moveForm', (cfg) => ({
+    ...cfg.state,
+    units: cfg.units,
+    init() {
+        this.refresh();
+        ['date', 'hour'].forEach((k) => this.$watch(k, () => this.refresh()));
+    },
+    async refresh() {
+        const r = cfg.reservation;
+        const { data } = await postJson(cfg.url, {
+            room_type_id: r.type, package_id: r.package, date: this.date, start_hour: +this.hour,
+            hours: r.hours, lc: r.lc, ignore: r.id,
+        });
+        const busy = Object.fromEntries((data.units || []).map((u) => [u.id, u.busy]));
+        this.units = this.units.map((u) => ({ ...u, busy: !!busy[u.id] }));
+    },
+}));
+
 /*
  * Admin promo form: live example calculation and overlap warning (FR-ADM-12/13).
  * Uses $root, not $el: when a method runs from @click, $el is the clicked button, not the form.

@@ -98,7 +98,7 @@ class ReservationController extends Controller
         if ($err = $this->availability->ruleError($type, $pkg, $in['date'], $in['start_hour'], $hours, true)) {
             return response()->json(['units' => $units, 'message' => $err], 422);
         }
-        $chosen = $in['room_id'] ? $units->firstWhere('id', (int) $in['room_id']) : $units->firstWhere('busy', false);
+        $chosen = ! empty($in['room_id']) ? $units->firstWhere('id', (int) $in['room_id']) : $units->firstWhere('busy', false);
         $message = ! $chosen ? "Semua unit {$type->name} sudah terisi di jam ini." : ($chosen['busy'] ? 'Unit yang dipilih sudah terisi di jam ini.' : '');
         $q = $pricing->calculate($type, $pkg, $in['date'], $in['start_hour'], $hours, (bool) ($in['lc'] ?? false));
 
@@ -135,11 +135,19 @@ class ReservationController extends Controller
             default => 'Halo {nama}, ini dari DM Karaoke & Cafe terkait reservasi {kode} untuk {tanggal} pukul {jam}. ',
         };
 
+        $units = Room::where('room_type_id', $r->room_type_id)->where(fn ($q) => $q->where('active', true)->orWhere('id', $r->room_id))->orderBy('sort')->get();
+
         return view('admin.reservations.show', [
             'r' => $r,
             'waLink' => $r->phone ? Phone::waLink(WhatsAppService::render($tpl, $r->templateVars()), $r->phone) : null,
-            'units' => Room::where('room_type_id', $r->room_type_id)->where(fn ($q) => $q->where('active', true)->orWhere('id', $r->room_id))->orderBy('sort')->get(),
+            'units' => $units,
             'hours' => OpHours::hours(),
+            'moveConfig' => [
+                'state' => ['roomId' => $r->room_id, 'date' => $r->ymd(), 'hour' => $r->start_hour],
+                'reservation' => ['id' => $r->id, 'type' => $r->room_type_id, 'package' => $r->package_id, 'hours' => $r->hours, 'lc' => (bool) $r->lc],
+                'units' => $units->map(fn ($u) => ['id' => $u->id, 'name' => $u->name, 'active' => (bool) $u->active, 'busy' => false])->values(),
+                'url' => route('admin.reservasi.preview'),
+            ],
         ]);
     }
 

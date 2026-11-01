@@ -52,13 +52,15 @@
         {{-- FR-ADM-09: move unit or time with conflict validation --}}
         <section class="card">
             <h2>Pindah unit atau jam</h2>
-            <form method="POST" action="{{ route('admin.reservasi.move', $r) }}" class="grid gap-4 sm:grid-cols-2">
+            <form method="POST" action="{{ route('admin.reservasi.move', $r) }}" class="grid gap-4 sm:grid-cols-2" x-data="moveForm(@js($moveConfig))">
                 @csrf
                 <div class="field"><label class="label" for="m-unit">Unit</label>
-                    <select class="input" id="m-unit" name="room_id">@foreach($units as $u)<option value="{{ $u->id }}" @selected($u->id === $r->room_id)>{{ $u->name }}{{ $u->active ? '' : ' (nonaktif)' }}</option>@endforeach</select></div>
-                <div class="field"><label class="label" for="m-date">Tanggal</label><input class="input" type="date" id="m-date" name="date" value="{{ $r->ymd() }}"></div>
+                    <select class="input" id="m-unit" name="room_id" x-model="roomId">
+                        <template x-for="u in units" :key="u.id"><option :value="u.id" :disabled="u.busy" :selected="String(roomId) === String(u.id)" x-text="u.name + (u.active ? '' : ' (nonaktif)') + (u.busy ? ' (Dipakai)' : '')"></option></template>
+                    </select></div>
+                <div class="field"><label class="label" for="m-date">Tanggal</label><input class="input" type="date" id="m-date" name="date" x-model="date"></div>
                 <div class="field"><label class="label" for="m-hour">Jam mulai</label>
-                    <select class="input" id="m-hour" name="start_hour">@foreach($hours as $h)<option value="{{ $h }}" @selected($h === $r->start_hour)>{{ hl($h) }}</option>@endforeach</select></div>
+                    <select class="input" id="m-hour" name="start_hour" x-model.number="hour">@foreach($hours as $h)<option value="{{ $h }}" @selected($h === $r->start_hour)>{{ hl($h) }}</option>@endforeach</select></div>
                 <div class="field"><span class="label">Durasi</span><span class="input grid items-center text-ink-muted">{{ $r->hours }} jam</span></div>
                 <label class="switch sm:col-span-2"><input type="checkbox" name="reprice" value="1" checked> Hitung ulang harga bila tanggal atau jam berubah</label>
                 @error('move')<p class="notice sm:col-span-2">{{ $message }}</p>@enderror

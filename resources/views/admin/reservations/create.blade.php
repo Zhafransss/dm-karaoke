@@ -19,7 +19,7 @@
         <label class="label" for="n-unit">Unit</label>
         <select class="input" id="n-unit" name="room_id" x-model="roomId">
             <option value="">Otomatis (unit kosong)</option>
-            <template x-for="u in units" :key="u.id"><option :value="u.id" :disabled="u.busy" :selected="String(roomId) === String(u.id)" x-text="u.name + (u.busy ? ' (terisi)' : '')"></option></template>
+            <template x-for="u in units" :key="u.id"><option :value="u.id" :disabled="u.busy" :selected="String(roomId) === String(u.id)" x-text="u.name + (u.busy ? ' (Dipakai)' : '')"></option></template>
         </select>
     </div>
     <div class="field md:col-span-2">
