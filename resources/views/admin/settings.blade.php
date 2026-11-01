@@ -42,27 +42,6 @@
         </div>
     </section>
 
-    <section class="card">
-        <h2>Template pesan</h2>
-        <p class="-mt-2 mb-2 text-sm leading-[22px] text-ink-subtle">Variabel yang bisa dipakai:</p>
-        <div class="vars flex flex-wrap gap-1.5 mb-4">@foreach(config('dmk.template_vars') as $v)<code>{{ '{'.$v.'}' }}</code>@endforeach</div>
-        <div class="grid gap-x-4 gap-y-6 md:grid-cols-2">
-            <div class="field"><label class="label" for="s-tadmin">Ke admin saat reservasi masuk</label><textarea class="input" id="s-tadmin" name="tpl_admin" rows="9">{{ old('tpl_admin', $s['tpl_admin']) }}</textarea></div>
-            <div class="field"><label class="label" for="s-tguest">Ke tamu saat reservasi masuk</label><textarea class="input" id="s-tguest" name="tpl_guest" rows="9">{{ old('tpl_guest', $s['tpl_guest']) }}</textarea></div>
-            <div class="field"><label class="label" for="s-tconf">Saat dikonfirmasi</label><textarea class="input" id="s-tconf" name="tpl_confirm" rows="7">{{ old('tpl_confirm', $s['tpl_confirm']) }}</textarea></div>
-            <div class="field"><label class="label" for="s-trej">Saat ditolak atau dibatalkan</label><textarea class="input" id="s-trej" name="tpl_reject" rows="7">{{ old('tpl_reject', $s['tpl_reject']) }}</textarea></div>
-        </div>
-        <p class="help mt-3 mb-0">Template konfirmasi dan pembatalan dipakai untuk pesan otomatis (bila diaktifkan) dan untuk tombol "Kabari tamu" di detail reservasi.</p>
-    </section>
-
-    <section class="card">
-        <h2>Analitik (opsional)</h2>
-        <div class="grid gap-x-4 gap-y-6 md:grid-cols-2">
-            <div class="field"><label class="label" for="s-ga">ID Google Analytics 4</label><input class="input" id="s-ga" name="analytics_id" value="{{ old('analytics_id', $s['analytics_id']) }}" placeholder="G-XXXXXXX"></div>
-            <div class="field"><label class="label" for="s-px">ID Meta Pixel</label><input class="input" id="s-px" name="meta_pixel_id" value="{{ old('meta_pixel_id', $s['meta_pixel_id']) }}" inputmode="numeric"></div>
-        </div>
-    </section>
-
     <div class="flex flex-wrap justify-end gap-3">
         <button class="btn btn-quiet btn-sm" type="submit" form="wa-test"><x-icon name="chat" class="ic-sm" />Kirim pesan uji</button>
         <button class="btn btn-primary btn-sm" type="submit">Simpan pengaturan</button>
