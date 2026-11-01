@@ -37,7 +37,7 @@
         <div class="grid gap-x-4 gap-y-6 md:grid-cols-2">
             <div class="field"><label class="label" for="s-gw">Penyedia gateway</label><select class="input" id="s-gw" name="wa_gateway">@foreach(config('dmk.wa_gateways') as $k => $l)<option value="{{ $k }}" @selected(old('wa_gateway', $s['wa_gateway']) === $k)>{{ $l }}</option>@endforeach</select></div>
             <div class="field"><label class="label" for="s-token">Token API</label><input class="input" id="s-token" name="wa_token" type="password" autocomplete="off" placeholder="{{ $s['wa_token'] ? 'Tersimpan. Isi untuk mengganti.' : 'Dari dashboard gateway' }}"><span class="help">Disimpan terenkripsi.</span></div>
-            <div class="field md:col-span-2"><label class="label" for="s-wa">Nomor WhatsApp admin (penerima notifikasi)</label><input class="input" id="s-wa" name="wa_admin" type="tel" value="{{ old('wa_admin', $s['wa_admin']) }}"></div>
+            <div class="field md:col-span-2"><label class="label" for="s-wa">Nomor WhatsApp admin (penerima notifikasi, pisahkan dengan koma)</label><input class="input" id="s-wa" name="wa_admin" type="text" placeholder="082220413723, 081234567890" value="{{ old('wa_admin', $s['wa_admin']) }}"></div>
             <label class="switch md:col-span-2"><input type="checkbox" name="wa_auto_status" value="1" @checked(old('wa_auto_status', $s['wa_auto_status']))> Kirim WhatsApp otomatis ke tamu saat reservasi dikonfirmasi atau dibatalkan</label>
         </div>
     </section>

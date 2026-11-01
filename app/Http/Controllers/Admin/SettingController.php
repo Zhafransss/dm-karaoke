@@ -28,7 +28,7 @@ class SettingController extends Controller
             'deposit' => ['nullable', 'string', 'max:60'],
             'wa_display' => ['required', 'string', 'max:20'],
             'wa_number' => ['required', 'string', 'max:20'],
-            'wa_admin' => ['required', 'string', 'max:20'],
+            'wa_admin' => ['required', 'string', 'max:200'],
             'wa_gateway' => ['nullable', Rule::in(array_keys(config('dmk.wa_gateways')))],
             'wa_token' => ['nullable', 'string', 'max:200'],
             'tpl_admin' => ['required', 'string', 'max:2000'], 'tpl_guest' => ['required', 'string', 'max:2000'],
@@ -47,16 +47,18 @@ class SettingController extends Controller
         if ($data['day_end'] <= $open || $data['day_end'] >= $closeOp) {
             $errors['day_end'] = 'Batas tarif siang harus di antara jam buka dan jam tutup.';
         }
-        foreach (['wa_admin', 'wa_number'] as $k) {
-            if (! Phone::valid($data[$k])) {
-                $errors[$k] = 'Format nomor tidak valid, contoh 082220413723.';
-            }
+        if (! Phone::valid($data['wa_number'])) {
+            $errors['wa_number'] = 'Format nomor tidak valid, contoh 082220413723.';
+        }
+        $admins = Phone::list($data['wa_admin']);
+        if (! $admins || count($admins) > 10 || collect($admins)->contains(fn ($n) => ! Phone::valid($n))) {
+            $errors['wa_admin'] = 'Isi 1–10 nomor valid dipisah koma, contoh 082220413723, 081234567890.';
         }
         if ($errors) {
             return back()->withInput()->withErrors($errors);
         }
 
-        $values = [...$data, 'close' => $closeOp, 'wa_admin' => Phone::normalize($data['wa_admin']), 'wa_number' => Phone::toWa($data['wa_number']),
+        $values = [...$data, 'close' => $closeOp, 'wa_admin' => implode(',', array_map(Phone::normalize(...), $admins)), 'wa_number' => Phone::toWa($data['wa_number']),
             'deposit' => trim((string) ($data['deposit'] ?? '')), 'wa_gateway' => $data['wa_gateway'] ?? '', 'wa_auto_status' => $request->boolean('wa_auto_status'),
             'analytics_id' => $data['analytics_id'] ?? '', 'meta_pixel_id' => $data['meta_pixel_id'] ?? ''];
         // Keep the stored token when the field is left empty.

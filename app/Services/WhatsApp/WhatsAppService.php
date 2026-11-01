@@ -26,7 +26,7 @@ class WhatsAppService
     {
         $vars = $r->templateVars();
         $ids = [];
-        if ($admin = Settings::get('wa_admin')) {
+        foreach (Phone::list(Settings::get('wa_admin')) as $admin) {
             $ids[] = $this->log($r, 'admin', $admin, 'tpl_admin', $vars)->id;
         }
         if ($r->phone) {
@@ -53,13 +53,18 @@ class WhatsAppService
 
     public function queueTest(): WaLog
     {
-        $log = WaLog::create([
-            'recipient' => 'admin', 'to' => Phone::toWa(Settings::get('wa_admin')), 'template' => 'test',
-            'body' => "Tes notifikasi dari panel admin DM Karaoke & Cafe.\nGateway: ".(Settings::get('wa_gateway') ?: 'simulasi'),
-        ]);
-        $this->send($log);
+        $logs = collect(Phone::list(Settings::get('wa_admin')))->map(function ($to) {
+            $log = WaLog::create([
+                'recipient' => 'admin', 'to' => Phone::toWa($to), 'template' => 'test',
+                'body' => "Tes notifikasi dari panel admin DM Karaoke & Cafe.\nGateway: ".(Settings::get('wa_gateway') ?: 'simulasi'),
+            ]);
+            $this->send($log);
 
-        return $log->fresh();
+            return $log->fresh();
+        });
+
+        // Report the first failure so the panel flags a partial problem.
+        return $logs->firstWhere('status', 'failed') ?? $logs->first();
     }
 
     public function send(WaLog $log): void
