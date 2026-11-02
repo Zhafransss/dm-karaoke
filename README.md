@@ -36,7 +36,7 @@ Pengujian memakai database `dm_karaoke_test` (lihat `phpunit.xml`): `php artisan
 3. Buat `.env` produksi: `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://…`, kredensial DB, `SEED_ADMIN_PASSWORD=…`.
 4. `php artisan key:generate`, `php artisan migrate --force`, `php artisan db:seed --class=CoreSeeder --force` (sekali saja).
 5. `php artisan config:cache && php artisan route:cache && php artisan view:cache`.
-6. Upload video: naikkan `upload_max_filesize` dan `post_max_size` ke minimal 64M (cPanel → MultiPHP INI Editor), karena batas aplikasi 50 MB per video (`max_video_mb` di `config/dmk.php`). Setelah update kode jalankan `php artisan migrate --force` (tabel media ruangan dan kolom video galeri).
+6. Upload video: naikkan `upload_max_filesize` ke minimal 16M dan `post_max_size` ke minimal 64M (cPanel → MultiPHP INI Editor), karena batas aplikasi 10 MB per video dan 8 MB per foto, hingga 20 file sekali unggah (`max_video_mb` di `config/dmk.php`). Setelah update kode jalankan `php artisan migrate --force` (tabel media ruangan dan kolom video galeri).
 7. Pastikan `storage/`, `bootstrap/cache/`, dan `public/uploads/` bisa ditulis. Unggahan disimpan di `public/uploads` sehingga tidak butuh `storage:link`.
 8. Cron cPanel:
    - Setiap menit: `php /home/USER/dmkaraoke/artisan schedule:run >> /dev/null 2>&1` (retry WhatsApp tiap 5 menit, bersihkan log 02.00).

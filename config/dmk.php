@@ -95,7 +95,7 @@ return [
     'wa_max_attempts' => 3,
 
     // Largest video upload in MB (gallery and room detail). The server's upload_max_filesize / post_max_size must be larger.
-    'max_video_mb' => 50,
+    'max_video_mb' => 10,
 
     // Defaults written to `settings` by the seeder and used when a key is missing.
     'settings_defaults' => [
