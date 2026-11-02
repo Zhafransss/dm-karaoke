@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\GalleryItem;
-use App\Services\ImageService;
+use App\Services\MediaService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-/** Gallery CMS: upload (WebP), categories, publish toggle (FR-ADM-14). */
+/** Gallery CMS: photo (WebP) and video upload, categories, publish toggle (FR-ADM-14). */
 class GalleryController extends Controller
 {
-    public function __construct(private ImageService $images) {}
+    public function __construct(private MediaService $media) {}
 
     public function index(Request $request)
     {
@@ -29,24 +29,28 @@ class GalleryController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'photos' => ['required', 'array', 'min:1', 'max:20'],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
+            'media' => ['required', 'array', 'min:1', 'max:20'],
+            'media.*' => MediaService::rules(),
             'caption' => ['nullable', 'string', 'max:150'],
             'category' => ['required', Rule::in(config('dmk.gallery_categories'))],
-        ], ['photos.required' => 'Pilih minimal satu foto dulu.', 'photos.*.image' => 'Ada file yang bukan gambar.', 'photos.*.max' => 'Ukuran foto maksimal 8 MB.']);
+        ], ['media.required' => 'Pilih minimal satu foto atau video dulu.', ...MediaService::messages('media.*')]);
 
-        $files = $request->file('photos');
-        $sort = (int) GalleryItem::min('sort');
+        $files = $request->file('media');
+        // New uploads go first: push existing items back so `sort` (unsigned) never goes negative.
+        GalleryItem::query()->increment('sort', count($files));
         foreach ($files as $i => $file) {
             $fromName = str_replace(['-', '_'], ' ', pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
-            $caption = $data['caption'] ? (count($files) > 1 ? "{$data['caption']} ".($i + 1) : $data['caption']) : $fromName;
+            $given = $data['caption'] ?? null;
+            $caption = $given ? (count($files) > 1 ? "{$given} ".($i + 1) : $given) : $fromName;
+            $stored = $this->media->store($file, 'gallery');
             GalleryItem::create([
-                'caption' => mb_substr($caption, 0, 150), 'category' => $data['category'], 'image' => $this->images->store($file, 'gallery'),
-                'sort' => $sort - count($files) + $i, 'published' => $request->boolean('published'),
+                'caption' => mb_substr($caption, 0, 150), 'category' => $data['category'], 'type' => $stored['type'],
+                'image' => $stored['type'] === 'image' ? $stored['path'] : null, 'video' => $stored['type'] === 'video' ? $stored['path'] : null,
+                'sort' => $i, 'published' => $request->boolean('published'),
             ]);
         }
 
-        return redirect()->route('admin.galeri.index')->with('ok', count($files).' foto ditambahkan.');
+        return redirect()->route('admin.galeri.index')->with('ok', count($files).' file ditambahkan.');
     }
 
     public function edit(GalleryItem $item)
@@ -68,14 +72,17 @@ class GalleryController extends Controller
     {
         $item->update(['published' => ! $item->published]);
 
-        return back()->with('ok', $item->published ? 'Foto ditampilkan di galeri.' : 'Foto disembunyikan dari galeri.');
+        $what = $item->isVideo() ? 'Video' : 'Foto';
+
+        return back()->with('ok', $item->published ? "{$what} ditampilkan di galeri." : "{$what} disembunyikan dari galeri.");
     }
 
     public function destroy(GalleryItem $item)
     {
-        $this->images->delete($item->image);
+        $this->media->delete($item->isVideo() ? $item->video : $item->image, $item->type);
+        $isVideo = $item->isVideo();
         $item->delete();
 
-        return back()->with('ok', 'Foto dihapus.');
+        return back()->with('ok', $isVideo ? 'Video dihapus.' : 'Foto dihapus.');
     }
 }

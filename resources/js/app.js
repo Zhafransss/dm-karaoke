@@ -165,6 +165,15 @@ Alpine.data('adminReservationForm', (cfg) => ({
     },
 }));
 
+/* Room detail: main photo/video viewer with thumbnails. */
+Alpine.data('mediaViewer', (items) => ({
+    items,
+    idx: 0,
+    get cur() { return this.items[this.idx]; },
+    go(i) { this.idx = i; },
+    step(d) { this.idx = (this.idx + d + this.items.length) % this.items.length; },
+}));
+
 /* Admin "Pindah unit atau jam" (FR-ADM-09): marks units already taken at the chosen date/time as "(Dipakai)". */
 Alpine.data('moveForm', (cfg) => ({
     ...cfg.state,

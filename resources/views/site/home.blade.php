@@ -94,20 +94,20 @@
 @endif
 
 <section class="band {{ $events->isNotEmpty() ? 'band-alt' : '' }}" aria-labelledby="gal-title"><div class="wrap">
-    <x-heading eyebrow="Galeri" title="Intip suasana <em>DM Karaoke</em>" lead="Ruangan, suasana, dan momen seru di DM Karaoke." id="gal-title" />
+    <x-heading eyebrow="Galeri" title="Intip suasana <em>DM Karaoke</em>" lead="Foto dan video ruangan, suasana, dan momen seru di DM Karaoke." id="gal-title" />
     @if($gallery->isNotEmpty())
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             @foreach($gallery as $g)
                 <a class="gal-item !mb-0 aspect-[4/3]" href="{{ route('galeri') }}">
-                    <x-img :path="$g->image" :alt="$g->caption.' di DM Karaoke & Cafe'" class="absolute inset-0 !h-full object-cover" />
+                    @if($g->isVideo())<x-video-thumb :path="$g->video" class="absolute inset-0 !h-full !aspect-auto" />@else<x-img :path="$g->image" :alt="$g->caption.' di DM Karaoke & Cafe'" class="absolute inset-0 !h-full object-cover" />@endif
                     <span class="gal-cap"><span>{{ $g->category }}</span><b>{{ $g->caption }}</b></span>
                 </a>
             @endforeach
         </div>
     @else
-        <div class="empty">Belum ada foto yang ditampilkan.</div>
+        <div class="empty">Belum ada foto atau video yang ditampilkan.</div>
     @endif
-    <div class="flex justify-center mt-8"><a class="btn btn-outline" href="{{ route('galeri') }}">Lihat semua foto</a></div>
+    <div class="flex justify-center mt-8"><a class="btn btn-outline" href="{{ route('galeri') }}">Lihat semua foto &amp; video</a></div>
 </div></section>
 
 <section class="band {{ $events->isNotEmpty() ? '' : 'band-alt' }}" aria-labelledby="loc-title"><div class="wrap">

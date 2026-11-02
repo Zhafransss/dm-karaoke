@@ -24,6 +24,7 @@
         'ext' => '<path d="M14 4h6v6M20 4l-9 9M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>',
         'check' => '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
         'checkCircle' => '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
+        'play' => '<path d="M8 5.5v13l11-6.5z"/>',
         'plus' => '<path d="M12 5v14M5 12h14"/>',
         'nav' => '<path d="M3.5 11 20 4l-7 16.5-2-7.5z"/>',
         'lock' => '<rect x="5" y="10.5" width="14" height="10" rx="1.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>',

@@ -128,7 +128,9 @@
     .room.featured { @apply border-gold-deep hover:shadow-glow-gold; }
     .room.featured::before { content: ""; @apply absolute inset-1.5 border border-gold-deep rounded-sm pointer-events-none opacity-55 z-[2]; }
     .media { @apply relative aspect-[4/3] bg-surface-overlay overflow-hidden; }
-    .media img { @apply absolute inset-0 w-full h-full object-cover; }
+    .media img, .media video { @apply absolute inset-0 w-full h-full object-cover; }
+    .play-badge { @apply absolute z-[1] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 grid place-items-center w-12 h-12 rounded-full border border-gold text-gold pointer-events-none; background: rgba(10, 9, 7, .7); }
+    .play-badge .ic { fill: currentColor; @apply w-5 h-5 translate-x-px; }
     .media-scrim::after { content: ""; @apply absolute inset-x-0 bottom-0 top-[40%] bg-scrim-bottom; }
     .ticks { @apply m-0 p-0 list-none flex flex-col gap-2; }
     .ticks li { @apply flex items-center gap-3 text-sm leading-[22px] text-ink-muted; }
@@ -199,6 +201,8 @@
     .ev.past img { filter: grayscale(.5) brightness(.8); }
     .gal-item { @apply relative block w-full p-0 mb-4 border border-line rounded-md overflow-hidden bg-surface-overlay cursor-zoom-in text-left; break-inside: avoid; }
     .gal-item img { @apply w-full h-auto transition duration-500; }
+    .gal-item video { @apply block w-full aspect-[4/3] object-cover transition duration-500; }
+    .gal-item:hover video { @apply scale-[1.04]; }
     .gal-item:hover img { @apply scale-[1.04]; }
     .gal-item::after { content: ""; @apply absolute inset-x-0 bottom-0 top-[45%] bg-scrim-bottom pointer-events-none; }
     .gal-cap { @apply absolute left-4 right-4 bottom-4 z-[1] flex flex-col gap-0.5; }

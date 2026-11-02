@@ -7,6 +7,7 @@ use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\RoomType;
 use App\Services\ImageService;
+use App\Services\MediaService;
 use App\Services\PromoService;
 use App\Support\OpHours;
 use Illuminate\Http\Request;
@@ -16,7 +17,7 @@ use Illuminate\Support\Str;
 /** Room types, rates and units (FR-ADM-10). */
 class RoomTypeController extends Controller
 {
-    public function __construct(private ImageService $images) {}
+    public function __construct(private ImageService $images, private MediaService $media) {}
 
     public function index(PromoService $promos)
     {
@@ -35,7 +36,7 @@ class RoomTypeController extends Controller
 
     public function edit(RoomType $roomType)
     {
-        return view('admin.rooms.form', ['t' => $roomType, 'units' => $roomType->rooms]);
+        return view('admin.rooms.form', ['t' => $roomType->load('media'), 'units' => $roomType->rooms]);
     }
 
     public function store(Request $request)
@@ -54,6 +55,7 @@ class RoomTypeController extends Controller
         if (Reservation::where('room_type_id', $roomType->id)->exists()) {
             return back()->withErrors(['delete' => "{$roomType->name} sudah punya riwayat reservasi. Nonaktifkan lewat tombol Ubah agar tidak bisa dipesan lagi, riwayatnya tetap aman."]);
         }
+        $mediaFiles = $roomType->media->map(fn ($m) => [$m->path, $m->type]);
         DB::transaction(function () use ($roomType) {
             $keys = [$roomType->rentKey(), ...$roomType->packages->map->pkgKey()];
             DB::table('promo_targets')->whereIn('target_key', $keys)->delete();
@@ -63,6 +65,7 @@ class RoomTypeController extends Controller
             $roomType->delete();
         });
         $this->images->delete($roomType->image);
+        $mediaFiles->each(fn ($m) => $this->media->delete($m[0], $m[1]));
 
         return redirect()->route('admin.ruangan.index')->with('ok', 'Tipe ruangan dihapus.');
     }

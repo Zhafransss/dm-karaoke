@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class RoomType extends Model
 {
@@ -32,6 +33,31 @@ class RoomType extends Model
     public function activeRooms(): HasMany
     {
         return $this->rooms()->where('active', true);
+    }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(RoomMedia::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /**
+     * Cover photo first, then extra photos and videos, for the public detail page.
+     *
+     * @return Collection<int, array{type: string, src: string, thumb: ?string}>
+     */
+    public function galleryItems(): Collection
+    {
+        $items = collect();
+        if ($this->image) {
+            $items->push(['type' => 'image', 'src' => upload_url($this->image), 'thumb' => upload_url($this->image, 'sm')]);
+        }
+        foreach ($this->media as $m) {
+            $items->push($m->isVideo()
+                ? ['type' => 'video', 'src' => upload_url($m->path), 'thumb' => null]
+                : ['type' => 'image', 'src' => upload_url($m->path), 'thumb' => upload_url($m->path, 'sm')]);
+        }
+
+        return $items;
     }
 
     public function packages(): HasMany

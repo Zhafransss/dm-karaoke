@@ -11,6 +11,7 @@ Route::controller(Site\SiteController::class)->group(function () {
     Route::get('/promo', 'promos')->name('promo');
     Route::get('/event', 'events')->name('event');
     Route::get('/event/{slug}', 'event')->name('event.show');
+    Route::get('/ruangan/{slug}', 'room')->name('ruangan.show');
     Route::get('/galeri', 'gallery')->name('galeri');
     Route::get('/kontak', 'contact')->name('kontak');
     Route::post('/kontak', 'contactStore')->name('kontak.store');
@@ -59,6 +60,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('can:ruangan')->group(function () {
             Route::resource('ruangan', Admin\RoomTypeController::class)->parameters(['ruangan' => 'roomType'])->except('show');
             Route::resource('paket', Admin\PackageController::class)->parameters(['paket' => 'package'])->except('show');
+            Route::post('/ruangan/{roomType}/media', [Admin\RoomMediaController::class, 'store'])->name('ruangan.media.store');
+            Route::delete('/ruangan/{roomType}/media/{media}', [Admin\RoomMediaController::class, 'destroy'])->name('ruangan.media.destroy');
             Route::post('/paket/{package}/toggle', [Admin\PackageController::class, 'toggle'])->name('paket.toggle');
         });
 

@@ -44,6 +44,19 @@ class SiteController extends Controller
         ]);
     }
 
+    public function room(string $slug, PromoService $promos)
+    {
+        $type = RoomType::active()->with('activePackages', 'media')->where('slug', $slug)->firstOrFail();
+        $today = OpHours::today();
+
+        return view('site.room', [
+            't' => $type,
+            'promo' => $promos->firstFor([$type->rentKey(), ...$type->activePackages->map->pkgKey()], $today),
+            'promoSvc' => $promos,
+            'today' => $today,
+        ]);
+    }
+
     public function promos()
     {
         $all = Promo::with('targetRows')->where('active', true)->get();
@@ -121,6 +134,7 @@ class SiteController extends Controller
     {
         $urls = collect(['home', 'harga', 'reservasi', 'promo', 'event', 'galeri', 'kontak'])
             ->map(fn ($r) => ['loc' => route($r), 'lastmod' => null]);
+        RoomType::active()->get(['slug', 'updated_at'])->each(fn ($t) => $urls->push(['loc' => route('ruangan.show', $t->slug), 'lastmod' => $t->updated_at?->toDateString()]));
         Event::published()->get(['slug', 'updated_at'])->each(fn ($e) => $urls->push(['loc' => route('event.show', $e->slug), 'lastmod' => $e->updated_at?->toDateString()]));
 
         return response()->view('site.sitemap', ['urls' => $urls])->header('Content-Type', 'application/xml');

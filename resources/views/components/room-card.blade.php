@@ -18,6 +18,7 @@
             <p class="mt-1 mb-0 text-sm leading-[22px] text-ink-muted">{{ $t->description }}</p>
         </div>
         <ul class="ticks">@foreach(array_filter($t->facilities ?? []) as $f)<li>{{ $f }}</li>@endforeach</ul>
+        <a class="self-start text-sm leading-[22px] text-gold no-underline hover:text-gold-bright hover:underline underline-offset-4" href="{{ route('ruangan.show', $t->slug) }}">Lihat foto &amp; video <span aria-hidden="true">→</span></a>
         <div class="mt-auto pt-4 border-t border-line flex flex-wrap items-end justify-between gap-4">
             <div>
                 @if($t->rentable)
