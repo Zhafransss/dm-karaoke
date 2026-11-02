@@ -110,6 +110,9 @@
     .switch input:checked::after { @apply translate-x-[18px] bg-gold; }
 
     /* ---------- Header / nav ---------- */
+    /* Home hero fills the screen under the sticky header (64px + 1px border; 72px + 1px from xl). svh = height without the mobile browser bar. */
+    .hero-full { min-height: calc(100vh - 65px); min-height: calc(100svh - 65px); }
+    @media (min-width: 1280px) { .hero-full { min-height: calc(100vh - 73px); min-height: calc(100svh - 73px); } }
     .site-header { @apply sticky z-50 border-b border-line backdrop-blur; top: env(safe-area-inset-top); background: rgba(18, 16, 12, .94); }
     .nav-link { @apply py-1.5 border-b border-transparent text-[13px] leading-5 font-medium uppercase tracking-[.14em] text-ink-muted no-underline transition hover:text-ink; }
     .nav-link[aria-current="page"] { @apply text-gold border-gold; }
