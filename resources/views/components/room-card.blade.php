@@ -14,11 +14,11 @@
     </div>
     <div class="flex flex-col flex-1 gap-4 p-6">
         <div>
-            <h3 class="m-0 font-display text-[28px] leading-[34px] font-semibold">{{ $t->name }}</h3>
+            <h3 class="m-0 font-display text-[28px] leading-[34px] font-semibold"><a class="text-inherit no-underline after:absolute after:inset-0 after:z-[3]" href="{{ route('ruangan.show', $t->slug) }}">{{ $t->name }}</a></h3>
             <p class="mt-1 mb-0 text-sm leading-[22px] text-ink-muted">{{ $t->description }}</p>
         </div>
         <ul class="ticks">@foreach(array_filter($t->facilities ?? []) as $f)<li>{{ $f }}</li>@endforeach</ul>
-        <a class="self-start text-sm leading-[22px] text-gold no-underline hover:text-gold-bright hover:underline underline-offset-4" href="{{ route('ruangan.show', $t->slug) }}">Lihat foto &amp; video <span aria-hidden="true">→</span></a>
+        <a class="relative z-[4] self-start text-sm leading-[22px] text-gold no-underline hover:text-gold-bright hover:underline underline-offset-4" href="{{ route('ruangan.show', $t->slug) }}">Lihat foto &amp; video <span aria-hidden="true">→</span></a>
         <div class="mt-auto pt-4 border-t border-line flex flex-wrap items-end justify-between gap-4">
             <div>
                 @if($t->rentable)
@@ -30,7 +30,7 @@
                 @endif
                 @if($promo)<span class="block mt-1.5 text-xs leading-[18px] text-gold">Promo: {{ $promo->name }}</span>@endif
             </div>
-            <a class="btn {{ $t->featured ? 'btn-primary' : 'btn-outline' }} btn-sm" href="{{ $bookUrl }}">Pilih jadwal</a>
+            <a class="btn {{ $t->featured ? 'btn-primary' : 'btn-outline' }} btn-sm relative z-[4]" href="{{ $bookUrl }}">Pilih jadwal</a>
         </div>
     </div>
 </article>
