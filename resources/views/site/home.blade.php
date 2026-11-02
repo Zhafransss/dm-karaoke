@@ -10,7 +10,6 @@
 @section('content')
 {{-- FR-PUB-01: hero, rooms with "mulai dari" price, running promos, upcoming events, gallery, WhatsApp --}}
 <section class="relative overflow-hidden text-center bg-bg" aria-labelledby="hero-title">
-    <img src="{{ asset('images/hero.webp') }}" alt="" class="absolute inset-0 w-full h-full object-cover opacity-30" fetchpriority="high">
     <div class="absolute inset-0 z-[1]" style="background: radial-gradient(ellipse at 50% 0%, rgba(201,165,76,.18) 0%, rgba(10,9,7,0) 60%), linear-gradient(180deg, rgba(10,9,7,.55) 0%, rgba(10,9,7,.7) 55%, #0a0907 100%)"></div>
     <svg class="absolute left-1/2 -bottom-px w-[1200px] h-[360px] -translate-x-1/2 z-[1] pointer-events-none" viewBox="0 0 1200 360" aria-hidden="true" fill="none" stroke="#8c6d2c" opacity=".5">
         <circle cx="600" cy="360" r="160"/><circle cx="600" cy="360" r="240"/><circle cx="600" cy="360" r="320"/><circle cx="600" cy="360" r="400"/><circle cx="600" cy="360" r="480"/>
