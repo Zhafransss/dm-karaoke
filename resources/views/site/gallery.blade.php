@@ -15,9 +15,9 @@
         <span class="caption">{{ $items->count() }} foto &amp; video</span>
     </div>
     @if($items->isNotEmpty())
-        <div class="[column-width:280px] [column-gap:16px] columns-3">
+        <div class="gal-grid" x-data="masonry">
             @foreach($items as $i => $g)
-                <button class="gal-item" type="button" @click="open({{ $i }})" aria-label="{{ $g->isVideo() ? 'Putar video' : 'Perbesar foto' }} {{ $g->caption }}">
+                <button class="gal-item" type="button" data-ratio="{{ $g->ratio() }}" @click="open({{ $i }})" aria-label="{{ $g->isVideo() ? 'Putar video' : 'Perbesar foto' }} {{ $g->caption }}">
                     @if($g->isVideo())<x-video-thumb :path="$g->video" />@else<x-img :path="$g->image" :alt="$g->caption.' di DM Karaoke & Cafe'" sizes="(max-width: 640px) 100vw, 380px" />@endif
                     <span class="gal-cap"><span>{{ $g->category }}</span><b>{{ $g->caption }}</b></span>
                 </button>

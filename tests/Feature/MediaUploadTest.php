@@ -138,6 +138,20 @@ class MediaUploadTest extends TestCase
         $this->assertSame($photo->image, $photo->fresh()->image);
     }
 
+    public function test_gallery_item_reports_its_aspect_ratio_for_the_public_grid(): void
+    {
+        $admin = $this->admin();
+        $this->actingAs($admin)->post('/admin/galeri', ['media' => [UploadedFile::fake()->image('p.jpg', 600, 800)], 'category' => 'Event', 'published' => 1]);
+        $this->actingAs($admin)->post('/admin/galeri', ['media' => [UploadedFile::fake()->create('v.mp4', 500, 'video/mp4')], 'category' => 'Event', 'published' => 1]);
+
+        $photo = GalleryItem::where('type', 'image')->firstOrFail();
+        $video = GalleryItem::where('type', 'video')->firstOrFail();
+        $this->assertSame(0.75, $photo->ratio());
+        $this->assertSame(1.333, $video->ratio());
+
+        $this->get('/galeri?kategori=Event')->assertOk()->assertSee('class="gal-grid"', false)->assertSee('data-ratio="0.75"', false)->assertSee('data-ratio="1.333"', false);
+    }
+
     public function test_media_cannot_be_deleted_through_another_room(): void
     {
         $admin = $this->admin();

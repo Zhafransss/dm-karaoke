@@ -232,7 +232,7 @@
     "src": "node_modules/@fontsource/jost/files/jost-latin-ext-600-normal.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CThWa0qG.css",
+    "file": "assets/app-DmFrNiYg.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -241,7 +241,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CeiiXI3U.js",
+    "file": "assets/app-DzdyuQVd.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

@@ -202,6 +202,11 @@
     .ev-date b { @apply block font-display text-[32px] leading-none text-gold font-semibold tabular; }
     .ev-date span { @apply text-[11px] leading-4 uppercase tracking-label text-ink-muted; }
     .ev.past img { filter: grayscale(.5) brightness(.8); }
+    /* Public gallery: a plain grid until masonry.js moves the items into balanced columns. */
+    .gal-grid { @apply grid gap-4 items-start sm:grid-cols-2 lg:grid-cols-3; }
+    .gal-grid.is-masonry { @apply flex; }
+    .gal-col { @apply flex flex-col flex-1 min-w-0 gap-4; }
+    .gal-grid .gal-item { @apply mb-0; }
     .gal-item { @apply relative block w-full p-0 mb-4 border border-line rounded-md overflow-hidden bg-surface-overlay cursor-zoom-in text-left; break-inside: avoid; }
     .gal-item img { @apply w-full h-auto transition duration-500; }
     .gal-item video { @apply block w-full aspect-[4/3] object-cover transition duration-500; }
