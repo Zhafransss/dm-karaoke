@@ -99,6 +99,45 @@ class MediaUploadTest extends TestCase
         $this->actingAs($admin)->get(route('admin.galeri.edit', GalleryItem::firstOrFail()))->assertOk()->assertSee('<video', false);
     }
 
+    public function test_gallery_item_file_can_be_replaced_and_old_file_is_removed(): void
+    {
+        $admin = $this->admin();
+        $this->actingAs($admin)->post('/admin/galeri', ['media' => [UploadedFile::fake()->image('lama.jpg', 800, 600)], 'category' => 'Area']);
+        $item = GalleryItem::firstOrFail();
+        $oldImage = $item->image;
+        $this->assertFileExists(public_path('uploads/'.$oldImage));
+
+        $this->actingAs($admin)->put(route('admin.galeri.update', $item), [
+            'caption' => 'Judul baru', 'category' => 'Cafe', 'media' => UploadedFile::fake()->image('baru.png', 900, 600),
+        ])->assertRedirect(route('admin.galeri.index'));
+
+        $item->refresh();
+        $this->assertSame('Judul baru', $item->caption);
+        $this->assertNotSame($oldImage, $item->image);
+        $this->assertFileExists(public_path('uploads/'.$item->image));
+        $this->assertFileDoesNotExist(public_path('uploads/'.$oldImage));
+
+        // Without a file only the text changes
+        $same = $item->image;
+        $this->actingAs($admin)->put(route('admin.galeri.update', $item), ['caption' => 'Lagi', 'category' => 'Cafe'])->assertRedirect();
+        $this->assertSame($same, $item->fresh()->image);
+    }
+
+    public function test_gallery_replacement_must_match_the_item_type(): void
+    {
+        $admin = $this->admin();
+        $this->actingAs($admin)->post('/admin/galeri', ['media' => [UploadedFile::fake()->image('a.jpg')], 'category' => 'Area']);
+        $photo = GalleryItem::firstOrFail();
+        $this->actingAs($admin)->put(route('admin.galeri.update', $photo), ['caption' => 'x', 'category' => 'Area', 'media' => UploadedFile::fake()->create('v.mp4', 500, 'video/mp4')])
+            ->assertSessionHasErrors('media');
+
+        $this->actingAs($admin)->post('/admin/galeri', ['media' => [UploadedFile::fake()->create('v.mp4', 500, 'video/mp4')], 'category' => 'Area']);
+        $video = GalleryItem::where('type', 'video')->firstOrFail();
+        $this->actingAs($admin)->put(route('admin.galeri.update', $video), ['caption' => 'x', 'category' => 'Area', 'media' => UploadedFile::fake()->image('a.jpg')])
+            ->assertSessionHasErrors('media');
+        $this->assertSame($photo->image, $photo->fresh()->image);
+    }
+
     public function test_media_cannot_be_deleted_through_another_room(): void
     {
         $admin = $this->admin();

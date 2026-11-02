@@ -62,10 +62,25 @@ class GalleryController extends Controller
     {
         $data = $request->validate([
             'caption' => ['required', 'string', 'max:150'], 'category' => ['required', Rule::in(config('dmk.gallery_categories'))],
-        ], ['caption.required' => 'Judul wajib diisi.']);
-        $item->update([...$data, 'published' => $request->boolean('published')]);
+            // Optional replacement file; a photo can only be replaced by a photo, a video by a video.
+            'media' => ['nullable', ...MediaService::rules(), fn ($a, $file, $fail) => MediaService::isVideo($file) !== $item->isVideo()
+                ? $fail($item->isVideo() ? 'Video hanya bisa diganti dengan video.' : 'Foto hanya bisa diganti dengan foto.') : null],
+        ], ['caption.required' => 'Judul wajib diisi.', ...MediaService::messages('media')]);
 
-        return redirect()->route('admin.galeri.index')->with('ok', 'Perubahan disimpan.');
+        $values = ['caption' => $data['caption'], 'category' => $data['category'], 'published' => $request->boolean('published')];
+        $oldPath = null;
+        if ($request->hasFile('media')) {
+            $stored = $this->media->store($request->file('media'), 'gallery');
+            $oldPath = $item->isVideo() ? $item->video : $item->image;
+            $values[$item->isVideo() ? 'video' : 'image'] = $stored['path'];
+        }
+        $item->update($values);
+        // Only after the row points at the new file, so a failure never leaves an item without media.
+        if ($oldPath) {
+            $this->media->delete($oldPath, $item->type);
+        }
+
+        return redirect()->route('admin.galeri.index')->with('ok', $oldPath ? ($item->isVideo() ? 'Video diganti.' : 'Foto diganti.') : 'Perubahan disimpan.');
     }
 
     public function toggle(GalleryItem $item)
