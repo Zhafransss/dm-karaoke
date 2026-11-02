@@ -48,7 +48,7 @@
             <label class="sm:col-span-2 flex flex-col items-center gap-2 px-4 py-8 border border-dashed border-gold-deep rounded-md bg-surface text-center cursor-pointer hover:border-gold hover:bg-gold-soft" for="u-file">
                 <x-icon name="upload" class="!w-8 !h-8 text-gold" /><b class="text-[15px] font-medium">Pilih foto atau video</b><span class="caption">Foto: JPG, PNG, WebP maks. 8 MB. Video: MP4, WebM, MOV maks. {{ config('dmk.max_video_mb') }} MB. Bisa lebih dari satu.</span>
             </label>
-            <input class="sr-only" id="u-file" type="file" name="media[]" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" multiple required @change="previews = [...$event.target.files].map(f => ({ src: URL.createObjectURL(f), video: f.type.startsWith('video/') }))">
+            <input class="sr-only" id="u-file" type="file" name="media[]" data-crop data-crop-ratio="orig" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" multiple required @change="previews = [...$event.target.files].map(f => ({ src: URL.createObjectURL(f), video: f.type.startsWith('video/') }))">
             <div class="sm:col-span-2 grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-2" x-show="previews.length">
                 <template x-for="p in previews" :key="p.src"><div class="relative aspect-square overflow-hidden rounded-sm border border-line"><img x-show="!p.video" :src="p.src" alt="" class="w-full h-full object-cover"><video x-show="p.video" :src="p.src + '#t=0.1'" preload="metadata" muted class="w-full h-full object-cover"></video></div></template>
             </div>

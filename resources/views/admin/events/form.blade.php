@@ -17,7 +17,7 @@
         <div class="flex flex-wrap items-center gap-4">
             <img :src="src" x-show="src" alt="" class="w-[120px] aspect-[4/5] object-cover rounded-sm border border-line">
             <label class="btn btn-quiet btn-sm" for="ev-photo"><x-icon name="upload" class="ic-sm" />{{ $e->image ? 'Ganti poster' : 'Pilih poster' }}</label>
-            <input class="sr-only" type="file" id="ev-photo" name="image" accept="image/jpeg,image/png,image/webp" @change="pick">
+            <input class="sr-only" type="file" id="ev-photo" name="image" data-crop data-crop-ratio="4:5" accept="image/jpeg,image/png,image/webp" @change="pick">
         </div>
         <span class="help">Tanpa poster, sistem memakai gambar bawaan. JPG, PNG, atau WebP maks. 8 MB.</span>
     </div>

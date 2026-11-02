@@ -29,7 +29,7 @@
         <div class="flex flex-wrap items-center gap-4">
             <img :src="src" x-show="src" alt="" class="w-[120px] aspect-[4/3] object-cover rounded-sm border border-line">
             <label class="btn btn-quiet btn-sm" for="t-photo"><x-icon name="upload" class="ic-sm" />{{ $t->image ? 'Ganti foto' : 'Pilih foto' }}</label>
-            <input class="sr-only" type="file" id="t-photo" name="image" accept="image/jpeg,image/png,image/webp" @change="pick">
+            <input class="sr-only" type="file" id="t-photo" name="image" data-crop data-crop-ratio="4:3" accept="image/jpeg,image/png,image/webp" @change="pick">
         </div>
         <span class="help">JPG, PNG, atau WebP maks. 8 MB. Otomatis dikompres menjadi WebP.</span>
     </div>
@@ -83,7 +83,7 @@
             <x-icon name="upload" class="!w-8 !h-8 text-gold" /><b class="text-[15px] font-medium">Pilih foto atau video</b>
             <span class="caption">Foto: JPG, PNG, WebP maks. 8 MB. Video: MP4, WebM, MOV maks. {{ config('dmk.max_video_mb') }} MB. Bisa lebih dari satu.</span>
         </label>
-        <input class="sr-only" id="m-file" type="file" name="media[]" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" multiple required
+        <input class="sr-only" id="m-file" type="file" name="media[]" data-crop data-crop-ratio="4:3" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" multiple required
                @change="previews = [...$event.target.files].map(f => ({ src: URL.createObjectURL(f), video: f.type.startsWith('video/') }))">
         <div class="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-2" x-show="previews.length" x-cloak>
             <template x-for="p in previews" :key="p.src"><div class="relative aspect-square overflow-hidden rounded-sm border border-line"><img x-show="!p.video" :src="p.src" alt="" class="w-full h-full object-cover"><video x-show="p.video" :src="p.src + '#t=0.1'" preload="metadata" muted class="w-full h-full object-cover"></video></div></template>

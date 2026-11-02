@@ -75,6 +75,7 @@
         </div>
     </div>
 </div>
+@include('partials.cropper')
 @include('partials.overlays')
 </body>
 </html>

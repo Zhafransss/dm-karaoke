@@ -1,5 +1,7 @@
 import Alpine from 'alpinejs';
 
+import './cropper';
+
 import '@fontsource/jost/400.css';
 import '@fontsource/jost/500.css';
 import '@fontsource/jost/600.css';
