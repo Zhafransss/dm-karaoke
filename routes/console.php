@@ -18,5 +18,9 @@ Artisan::command('dmk:prune', function () {
     $this->info("{$n} log WhatsApp lama dihapus.");
 })->purpose('Bersihkan log lama');
 
-Schedule::command('wa:retry')->everyFiveMinutes()->withoutOverlapping();
-Schedule::command('dmk:prune')->dailyAt('02.00');
+// Run in-process via Artisan::call: Schedule::command() spawns a child process
+// through proc_open, which Hostinger shared hosting disables.
+Schedule::call(fn () => Artisan::call('wa:retry'))
+    ->name('wa:retry')->everyFiveMinutes()->withoutOverlapping();
+Schedule::call(fn () => Artisan::call('dmk:prune'))
+    ->name('dmk:prune')->dailyAt('02.00');
