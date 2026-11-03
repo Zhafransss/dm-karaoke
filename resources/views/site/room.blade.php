@@ -64,6 +64,7 @@
                 @endif
                 @if($promo)<span class="block mt-1.5 text-xs leading-[18px] text-gold">Promo: {{ $promo->name }}</span>@endif
             </div>
+            @if($t->rentable || $t->prepaid)<p class="m-0 text-sm leading-[22px] text-ink-muted">{{ $t->depositText() }}</p>@endif
             <a class="btn btn-primary" href="{{ $bookUrl }}">Pilih jadwal</a>
         </aside>
     </div>

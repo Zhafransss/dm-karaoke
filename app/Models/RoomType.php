@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 
 class RoomType extends Model
 {
-    protected $fillable = ['name', 'slug', 'description', 'facilities', 'image', 'cap', 'show_cap', 'rentable', 'rate_day', 'rate_night', 'featured', 'sort', 'active'];
+    protected $fillable = ['name', 'slug', 'description', 'facilities', 'image', 'cap', 'show_cap', 'rentable', 'rate_day', 'rate_night', 'deposit', 'prepaid', 'featured', 'sort', 'active'];
 
     protected function casts(): array
     {
@@ -17,6 +17,8 @@ class RoomType extends Model
             'facilities' => 'array',
             'show_cap' => 'boolean',
             'rentable' => 'boolean',
+            'prepaid' => 'boolean',
+            'deposit' => 'integer',
             'featured' => 'boolean',
             'active' => 'boolean',
             'cap' => 'integer',
@@ -84,6 +86,34 @@ class RoomType extends Model
     public function maxPax(): int
     {
         return $this->cap ?: (int) config('dmk.max_pax_fallback');
+    }
+
+    /** "Rp 500.000", or '' when no deposit amount is set. */
+    public function depositLabel(): string
+    {
+        return $this->deposit > 0 ? rp($this->deposit) : '';
+    }
+
+    /** Where and when the guest pays, as a short phrase for WhatsApp messages. */
+    public function paymentShort(): string
+    {
+        return $this->prepaid ? 'wajib dilunasi di awal' : 'dibayar di tempat';
+    }
+
+    public function paymentNote(): string
+    {
+        return $this->prepaid ? 'Wajib lunas di awal, tanpa deposit.' : 'Dibayar di tempat.';
+    }
+
+    public function depositText(): string
+    {
+        if ($this->prepaid) {
+            return 'Wajib lunas di awal, tanpa deposit.';
+        }
+
+        return $this->deposit > 0
+            ? "Deposit {$this->depositLabel()} berupa uang, dibayar di tempat."
+            : 'Deposit berupa uang, dibayar di tempat. Besarnya diinformasikan admin saat konfirmasi.';
     }
 
     public function rentKey(): string

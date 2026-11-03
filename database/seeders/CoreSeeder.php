@@ -24,17 +24,17 @@ class CoreSeeder extends Seeder
         $std = RoomType::create([
             'name' => 'Standard Room', 'slug' => 'standard-room', 'description' => 'Pas untuk kumpul keluarga kecil atau teman dekat.',
             'facilities' => ['Layar TV besar', 'Mic nirkabel', 'Sofa nyaman'], 'image' => $asset('p6c'),
-            'cap' => 6, 'show_cap' => true, 'rentable' => true, 'rate_day' => 40000, 'rate_night' => 80000, 'sort' => 1,
+            'cap' => 6, 'show_cap' => true, 'rentable' => true, 'rate_day' => 40000, 'rate_night' => 80000, 'deposit' => 500000, 'sort' => 1,
         ]);
         $vip = RoomType::create([
             'name' => 'VIP Room', 'slug' => 'vip-room', 'description' => 'Ruang lebih luas untuk rombongan dan perayaan.',
             'facilities' => ['Ruang lebih lega', 'Sound system premium', 'Cocok untuk rombongan'], 'image' => $asset('p6'),
-            'cap' => 10, 'show_cap' => true, 'rentable' => true, 'rate_day' => 60000, 'rate_night' => 120000, 'featured' => true, 'sort' => 2,
+            'cap' => 10, 'show_cap' => true, 'rentable' => true, 'rate_day' => 60000, 'rate_night' => 120000, 'deposit' => 500000, 'featured' => true, 'sort' => 2,
         ]);
         $master = RoomType::create([
             'name' => 'Master Room', 'slug' => 'master-room', 'description' => 'Pilihan paling lengkap untuk perayaan istimewa. Hanya tersedia dalam bentuk paket.',
             'facilities' => ['Ruang terbaik kami', 'Paket lengkap dengan LC', 'Food platter'], 'image' => $asset('p4'),
-            'cap' => null, 'show_cap' => false, 'rentable' => false, 'rate_day' => 0, 'rate_night' => 0, 'sort' => 3,
+            'cap' => null, 'show_cap' => false, 'rentable' => false, 'rate_day' => 0, 'rate_night' => 0, 'prepaid' => true, 'sort' => 3,
         ]);
 
         foreach ([[$std, 'Standard', 3], [$vip, 'VIP', 5], [$master, 'Master', 1]] as [$type, $label, $n]) {

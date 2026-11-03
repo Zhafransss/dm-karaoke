@@ -18,7 +18,7 @@
             <dt>Status</dt><dd><x-status-badge :status="$r->status" /></dd>
         </dl>
         <div class="w-full max-w-[440px] text-left"><x-price-summary :r="$r" /></div>
-        <p class="notice notice-info text-left max-w-[520px]">Detail reservasi dikirim ke WhatsApp <b>{{ $r->phone }}</b>. Admin juga menerima notifikasi dan akan segera mengonfirmasi jadwalmu. Simpan kode di atas untuk cek status. Pembayaran dilakukan di tempat.</p>
+        <p class="notice notice-info text-left max-w-[520px]">Detail reservasi dikirim ke WhatsApp <b>{{ $r->phone }}</b>. Admin juga menerima notifikasi dan akan segera mengonfirmasi jadwalmu. Simpan kode di atas untuk cek status. @if($r->roomType->prepaid){{ $r->roomType->name }} wajib lunas di awal (tanpa deposit); hubungi admin lewat WhatsApp untuk pelunasan agar jadwalmu dikonfirmasi.@else Pembayaran dilakukan di tempat.@endif</p>
         <div class="flex flex-wrap justify-center gap-3">
             <a class="btn btn-primary" href="{{ $waLink }}" target="_blank" rel="noopener"><x-icon name="chat" class="ic-sm" />Hubungi via WhatsApp</a>
             <a class="btn btn-outline" href="{{ route('cek-status', ['kode' => $r->code]) }}">Cek status</a>

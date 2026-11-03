@@ -42,7 +42,7 @@
 @endif
 
 <section class="band" aria-labelledby="rooms-title"><div class="wrap">
-    <x-heading eyebrow="Pilihan ruangan" title="Pilih ruangan <em>sesuai</em> rombonganmu" lead="Sewa per jam atau pilih paket. Semua dibayar langsung di tempat." id="rooms-title" />
+    <x-heading eyebrow="Pilihan ruangan" title="Pilih ruangan <em>sesuai</em> rombonganmu" :lead="'Sewa per jam atau pilih paket. '.($types->contains('prepaid', true) ? 'Dibayar langsung di tempat, kecuali ruangan yang wajib lunas di awal.' : 'Semua dibayar langsung di tempat.')" id="rooms-title" />
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         @foreach($types as $t)
             <x-room-card :type="$t" :promo="$promoSvc->firstFor([$t->rentKey(), ...$t->activePackages->map->pkgKey()], $today)" />

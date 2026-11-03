@@ -17,6 +17,7 @@
                     <h3 class="m-0 font-display text-[28px] leading-8 font-semibold">{{ $t->name }}</h3>
                     @unless($t->active)<span class="badge">Nonaktif</span>@endunless
                     @unless($t->rentable)<span class="badge">Hanya paket</span>@endunless
+                    @if($t->prepaid)<span class="badge badge-gold">Lunas di awal</span>@elseif($t->deposit)<span class="badge">Deposit {{ $t->depositLabel() }}</span>@endif
                     @if($promo)<span class="badge badge-gold">Promo: {{ $promo->name }}</span>@endif
                 </div>
                 <p class="caption m-0">{{ $t->cap ? 'Maks. '.$t->cap.' orang'.($t->show_cap ? '' : ' (tidak ditampilkan di website)') : 'Kapasitas tidak ditentukan' }} · {{ $t->packages->count() }} paket · {{ collect($t->facilities)->filter()->join(', ') }}</p>

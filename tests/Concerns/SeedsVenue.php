@@ -20,9 +20,9 @@ trait SeedsVenue
     {
         Settings::set(config('dmk.settings_defaults'));
 
-        $this->std = RoomType::create(['name' => 'Standard Room', 'slug' => 'standard-room', 'cap' => 6, 'show_cap' => true, 'rentable' => true, 'rate_day' => 40000, 'rate_night' => 80000, 'sort' => 1, 'active' => true]);
-        $this->vip = RoomType::create(['name' => 'VIP Room', 'slug' => 'vip-room', 'cap' => 10, 'show_cap' => true, 'rentable' => true, 'rate_day' => 60000, 'rate_night' => 120000, 'sort' => 2, 'active' => true]);
-        $this->master = RoomType::create(['name' => 'Master Room', 'slug' => 'master-room', 'cap' => null, 'show_cap' => false, 'rentable' => false, 'rate_day' => 0, 'rate_night' => 0, 'sort' => 3, 'active' => true]);
+        $this->std = RoomType::create(['name' => 'Standard Room', 'slug' => 'standard-room', 'cap' => 6, 'show_cap' => true, 'rentable' => true, 'rate_day' => 40000, 'rate_night' => 80000, 'deposit' => 500000, 'sort' => 1, 'active' => true]);
+        $this->vip = RoomType::create(['name' => 'VIP Room', 'slug' => 'vip-room', 'cap' => 10, 'show_cap' => true, 'rentable' => true, 'rate_day' => 60000, 'rate_night' => 120000, 'deposit' => 750000, 'sort' => 2, 'active' => true]);
+        $this->master = RoomType::create(['name' => 'Master Room', 'slug' => 'master-room', 'cap' => null, 'show_cap' => false, 'rentable' => false, 'rate_day' => 0, 'rate_night' => 0, 'prepaid' => true, 'sort' => 3, 'active' => true]);
 
         foreach ([[$this->std, 'Standard', 3], [$this->vip, 'VIP', 5], [$this->master, 'Master', 1]] as [$t, $label, $n]) {
             for ($i = 1; $i <= $n; $i++) {

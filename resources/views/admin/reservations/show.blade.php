@@ -29,6 +29,7 @@
             @if($r->ip)<dt>IP</dt><dd class="caption !text-sm">{{ $r->ip }}</dd>@endif
         </dl>
         <x-price-summary :r="$r" />
+        @if($r->roomType?->prepaid && $r->isOccupying())<p class="notice notice-info m-0">{{ $r->roomType->name }} wajib lunas di awal. Pastikan pembayaran sudah diterima sebelum mengkonfirmasi.</p>@endif
         <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-line">
             @if($waLink)
                 <a class="btn btn-outline btn-sm" href="{{ $waLink }}" target="_blank" rel="noopener"><x-icon name="chat" class="ic-sm" />{{ ['dikonfirmasi' => 'Kabari tamu: dikonfirmasi', 'dibatalkan' => 'Kabari tamu: dibatalkan'][$r->status] ?? 'Hubungi via WhatsApp' }}</a>

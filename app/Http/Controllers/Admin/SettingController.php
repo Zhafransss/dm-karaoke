@@ -10,7 +10,7 @@ use App\Support\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-/** Opening hours, day/night boundary, deposit, WhatsApp gateway and templates (FR-ADM-17). */
+/** Opening hours, day/night boundary, WhatsApp gateway and templates (FR-ADM-17). */
 class SettingController extends Controller
 {
     public function edit()
@@ -25,7 +25,6 @@ class SettingController extends Controller
             'close' => ['required', 'integer', 'between:1,47'],
             'day_end' => ['required', 'integer'],
             'max_days' => ['required', 'integer', 'between:1,120'],
-            'deposit' => ['nullable', 'string', 'max:60'],
             'wa_display' => ['required', 'string', 'max:20'],
             'wa_number' => ['required', 'string', 'max:20'],
             'wa_admin' => ['required', 'string', 'max:200'],
@@ -61,7 +60,7 @@ class SettingController extends Controller
         }
 
         $values = [...$data, 'close' => $closeOp, 'wa_admin' => implode(',', array_map(Phone::normalize(...), $admins)), 'wa_number' => Phone::toWa($data['wa_number']),
-            'deposit' => trim((string) ($data['deposit'] ?? '')), 'wa_gateway' => $data['wa_gateway'] ?? '', 'wa_auto_status' => $request->boolean('wa_auto_status')];
+            'wa_gateway' => $data['wa_gateway'] ?? '', 'wa_auto_status' => $request->boolean('wa_auto_status')];
         // Keep the stored token when the field is left empty.
         if (($data['wa_token'] ?? '') === '') {
             unset($values['wa_token']);

@@ -17,8 +17,6 @@
             <div class="field"><label class="label" for="s-dayend">Batas tarif siang</label><select class="input" id="s-dayend" name="day_end">@for($h = 1; $h <= 31; $h++)<option value="{{ $h }}" @selected(old('day_end', $s['day_end']) == $h)>{{ $closeLabel($h) }}</option>@endfor</select>
                 <span class="help">Sebelum jam ini berlaku tarif siang: gratis dengan LC dan deposit, atau tarif siang tanpa LC.</span></div>
             <div class="field"><label class="label" for="s-max">Reservasi paling jauh (hari ke depan)</label><input class="input" type="number" id="s-max" name="max_days" min="1" max="120" value="{{ old('max_days', $s['max_days']) }}"></div>
-            <div class="field md:col-span-2"><label class="label" for="s-deposit">Besaran deposit (tampil di website)</label><input class="input" id="s-deposit" name="deposit" value="{{ old('deposit', $s['deposit']) }}" placeholder="Contoh: Rp 200.000" maxlength="60">
-                <span class="help">Deposit berupa uang, dibayar di tempat. Kosongkan bila belum ditentukan; website akan menulis "besarnya diinformasikan admin saat konfirmasi".</span></div>
             <p class="help md:col-span-2 m-0">Anti-spam: maksimal {{ config('dmk.rate_limit.reservations_per_hour') }} reservasi per jam dari IP yang sama. Reservasi selalu mulai di jam bulat, minimal 1 jam, tanpa jeda antar booking.</p>
         </div>
     </section>

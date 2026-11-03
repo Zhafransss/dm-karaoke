@@ -13,7 +13,7 @@
 @endphp
 
 @section('content')
-<x-page-head crumb="Harga" eyebrow="Daftar harga" title="Harga <em>paket</em> dan sewa ruangan" lead="Semua harga dibayar langsung di tempat. Pilih paket atau sewa ruangan saja, lalu cek jam yang masih kosong." />
+<x-page-head crumb="Harga" eyebrow="Daftar harga" title="Harga <em>paket</em> dan sewa ruangan" :lead="($types->contains('prepaid', true) ? 'Harga dibayar langsung di tempat, kecuali ruangan yang wajib lunas di awal.' : 'Semua harga dibayar langsung di tempat.').' Pilih paket atau sewa ruangan saja, lalu cek jam yang masih kosong.'" />
 
 {{-- FR-PUB-02 --}}
 <section class="band"><div class="wrap">
@@ -43,7 +43,7 @@
     @endif
     <ul class="max-w-[760px] mx-auto mt-6 pl-5 flex flex-col gap-2 text-sm leading-[22px] text-ink-muted list-disc">
         @if($vip)<li>Booking yang melewati jam {{ hl($dayEnd) }} dihitung per jam sesuai tarifnya. Contoh {{ $vip->name }} {{ hl($dayEnd - 1) }}–{{ hl($dayEnd + 2) }} tanpa LC: {{ rp($vip->rate_day) }} + 2 × {{ rp($vip->rate_night) }} = {{ rp($vip->rate_day + 2 * $vip->rate_night) }}.</li>@endif
-        <li>{{ QuotePresenter::depositText() }}</li>
+        @foreach($types->filter(fn ($t) => $t->rentable || $t->prepaid) as $dt)<li><b class="font-medium text-ink">{{ $dt->name }}:</b> {{ $dt->depositText() }}</li>@endforeach
         <li>LC (pemandu lagu) bersifat pilihan, tidak wajib. Penambahan jam dilakukan langsung bersama admin.</li>
     </ul>
     <div class="flex justify-center mt-8"><a class="btn btn-primary" href="{{ route('reservasi') }}">Cek jadwal &amp; reservasi</a></div>

@@ -26,7 +26,7 @@
                     @php($r = $result)
                     @php($msg = [
                         'menunggu' => 'Admin sedang mengecek reservasimu. Kamu akan dihubungi lewat WhatsApp.',
-                        'dikonfirmasi' => 'Reservasimu sudah dikonfirmasi. Datang sesuai jadwal ya, pembayaran di tempat.',
+                        'dikonfirmasi' => 'Reservasimu sudah dikonfirmasi. Datang sesuai jadwal ya'.($r->roomType->prepaid ? '.' : ', pembayaran di tempat.'),
                         'selesai' => 'Terima kasih sudah bernyanyi di DM Karaoke & Cafe.',
                         'dibatalkan' => 'Reservasi ini dibatalkan. Silakan pilih jadwal lain atau hubungi kami lewat WhatsApp.',
                         'tidak_datang' => 'Reservasi ini tercatat tidak datang. Hubungi kami bila ada kekeliruan.',

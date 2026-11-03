@@ -77,6 +77,7 @@ class RoomTypeController extends Controller
             'description' => ['nullable', 'string', 'max:255'],
             'cap' => ['nullable', 'integer', 'min:1', 'max:200'],
             'rate_day' => ['nullable', 'integer', 'min:0'],
+            'deposit' => ['nullable', 'integer', 'min:0'],
             'rate_night' => [$request->boolean('rentable') ? 'required' : 'nullable', 'integer', $request->boolean('rentable') ? 'min:1' : 'min:0'],
             'facilities' => ['array', 'max:3'], 'facilities.*' => ['nullable', 'string', 'max:60'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
@@ -107,6 +108,8 @@ class RoomTypeController extends Controller
                 'name' => $data['name'], 'description' => $data['description'] ?? null,
                 'cap' => $data['cap'] ?? null, 'show_cap' => $request->boolean('show_cap'), 'rentable' => $request->boolean('rentable'),
                 'rate_day' => (int) ($data['rate_day'] ?? 0), 'rate_night' => (int) ($data['rate_night'] ?? 0),
+                // Paid in full up front means there is no deposit.
+                'prepaid' => $request->boolean('prepaid'), 'deposit' => $request->boolean('prepaid') ? 0 : (int) ($data['deposit'] ?? 0),
                 'facilities' => array_values(array_map(fn ($f) => trim((string) $f), $data['facilities'] ?? [])),
                 'featured' => $request->boolean('featured'), 'active' => $request->boolean('active'),
             ]);

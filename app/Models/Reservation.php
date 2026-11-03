@@ -109,6 +109,7 @@ class Reservation extends Model
             'durasi' => $this->hours.' jam',
             'total' => rp($this->total),
             'orang' => (string) $this->pax,
+            'pembayaran' => $this->roomType?->paymentShort() ?? 'dibayar di tempat',
         ];
     }
 }

@@ -59,7 +59,7 @@ class ReservationController extends Controller
                 ],
                 'types' => $types->map(fn (RoomType $t) => [
                     'id' => $t->id, 'name' => $t->name, 'rentable' => $t->rentable, 'cap' => $t->publicCap(), 'maxPax' => $t->maxPax(),
-                    'rateDay' => $t->rate_day, 'rateNight' => $t->rate_night,
+                    'rateDay' => $t->rate_day, 'rateNight' => $t->rate_night, 'deposit' => $t->depositLabel(), 'prepaid' => $t->prepaid,
                     'packages' => $t->activePackages->map(fn (Package $p) => [
                         'id' => $p->id, 'name' => $p->name, 'brand' => $p->brand, 'price' => rp($p->price), 'hours' => $p->hours,
                         'start_hour' => $p->start_hour, 'start_label' => $p->start_hour !== null ? hl($p->start_hour) : null, 'items' => $p->items ?? [],
@@ -138,7 +138,7 @@ class ReservationController extends Controller
         }
         $q = $pricing->calculate($type, $pkg, $in['date'], $in['start_hour'], $in['hours'], (bool) ($in['lc'] ?? false));
 
-        return response()->json(QuotePresenter::forQuote($q, $in['date'], $in['start_hour']));
+        return response()->json(QuotePresenter::forQuote($q, $in['date'], $in['start_hour'], $type));
     }
 
     public function store(Request $request, ReservationService $service)

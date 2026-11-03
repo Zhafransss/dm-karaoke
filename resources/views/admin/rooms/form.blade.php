@@ -8,7 +8,7 @@
 @section('content')
 {{-- FR-ADM-10 --}}
 <form method="POST" action="{{ $t->exists ? route('admin.ruangan.update', $t) : route('admin.ruangan.store') }}" enctype="multipart/form-data" class="card grid gap-x-4 gap-y-6 md:grid-cols-2 max-w-[860px]"
-      x-data="{ units: @js($units->values()), add() { const base = (document.getElementById('t-name').value.trim().split(' ')[0] || 'Ruang'); this.units.push({ id: null, name: base + ' ' + (this.units.length + 1), active: true }); } }">
+      x-data="{ prepaid: @js((bool) old('prepaid', $t->prepaid)), units: @js($units->values()), add() { const base = (document.getElementById('t-name').value.trim().split(' ')[0] || 'Ruang'); this.units.push({ id: null, name: base + ' ' + (this.units.length + 1), active: true }); } }">
     @csrf
     @if($t->exists) @method('PUT') @endif
     <div class="field"><label class="label" for="t-name">Nama tipe</label><input class="input" id="t-name" name="name" value="{{ old('name', $t->name) }}" placeholder="Contoh: Standard Room" required maxlength="80"></div>
@@ -17,6 +17,8 @@
     <label class="switch"><input type="checkbox" name="rentable" value="1" @checked(old('rentable', $t->rentable))> Bisa disewa tanpa paket (per jam)</label>
     <div class="field"><label class="label" for="t-rday">Siang tanpa LC (Rp per jam)</label><input class="input" id="t-rday" name="rate_day" type="number" min="0" step="1000" value="{{ old('rate_day', $t->rate_day) }}" inputmode="numeric"><span class="help">Dengan LC dan deposit, siang gratis.</span></div>
     <div class="field"><label class="label" for="t-rnight">Malam (Rp per jam)</label><input class="input" id="t-rnight" name="rate_night" type="number" min="0" step="1000" value="{{ old('rate_night', $t->rate_night) }}" inputmode="numeric"></div>
+    <label class="switch md:col-span-2"><input type="checkbox" name="prepaid" value="1" @checked(old('prepaid', $t->prepaid)) x-model="prepaid"> Wajib lunas di awal (tanpa deposit)</label>
+    <div class="field md:col-span-2" x-show="!prepaid"><label class="label" for="t-deposit">Deposit (Rp)</label><input class="input" id="t-deposit" name="deposit" type="number" min="0" step="1000" value="{{ old('deposit', $t->deposit) }}" inputmode="numeric" placeholder="Kosongkan bila belum ditentukan"><span class="help">Berupa uang, dibayar di tempat. Dipakai untuk sewa siang dengan LC. Kosongkan bila belum ditentukan; website menulis "besarnya diinformasikan admin".</span></div>
     <label class="switch"><input type="checkbox" name="active" value="1" @checked(old('active', $t->active))> Tampil dan bisa dipesan</label>
     <label class="switch"><input type="checkbox" name="featured" value="1" @checked(old('featured', $t->featured))> Tandai sebagai pilihan unggulan</label>
     <div class="field md:col-span-2"><label class="label" for="t-desc">Deskripsi singkat</label><input class="input" id="t-desc" name="description" value="{{ old('description', $t->description) }}" maxlength="255"></div>

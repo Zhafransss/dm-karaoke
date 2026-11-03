@@ -102,7 +102,7 @@ class ReservationController extends Controller
         $message = ! $chosen ? "Semua unit {$type->name} sudah terisi di jam ini." : ($chosen['busy'] ? 'Unit yang dipilih sudah terisi di jam ini.' : '');
         $q = $pricing->calculate($type, $pkg, $in['date'], $in['start_hour'], $hours, (bool) ($in['lc'] ?? false));
 
-        return response()->json(['units' => $units, 'message' => $message, 'quote' => QuotePresenter::forQuote($q, $in['date'], $in['start_hour'])]);
+        return response()->json(['units' => $units, 'message' => $message, 'quote' => QuotePresenter::forQuote($q, $in['date'], $in['start_hour'], $type)]);
     }
 
     public function store(Request $request)

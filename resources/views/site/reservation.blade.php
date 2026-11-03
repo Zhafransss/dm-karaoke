@@ -7,7 +7,6 @@
 @php
     use App\Support\OpHours;
     $open = OpHours::open(); $dayEnd = OpHours::dayEnd(); $close = OpHours::close();
-    $deposit = trim((string) \App\Support\Settings::get('deposit'));
     $limit = config('dmk.rate_limit.reservations_per_hour');
 @endphp
 
@@ -147,7 +146,7 @@
                     </div>
                     <div class="field sm:col-span-2" x-show="!pkg && type?.rentable">
                         <label class="check items-start" for="r-lc"><input type="checkbox" id="r-lc" name="lc" value="1" x-model="lc" class="mt-0.5"> <span>Dengan LC (pemandu lagu, 21+)</span></label>
-                        <span class="help" x-text="type ? `Siang {{ hl($open) }}–{{ hl($dayEnd) }}: dengan LC cukup deposit uang` + @js($deposit !== '' ? " {$deposit}" : '') + `, atau Rp ${type.rateDay.toLocaleString('id-ID')}/jam tanpa LC.` : ''"></span>
+                        <span class="help" x-text="type ? `Siang {{ hl($open) }}–{{ hl($dayEnd) }}: dengan LC cukup deposit uang` + (type.deposit ? ` ${type.deposit}` : '') + `, atau Rp ${type.rateDay.toLocaleString('id-ID')}/jam tanpa LC.` : ''"></span>
                     </div>
                     <div class="field sm:col-span-2">
                         <label class="label" for="r-name">Nama pemesan</label>
@@ -178,6 +177,7 @@
                                 <div class="sum-total"><span>Total</span><b x-text="quote.total"></b></div>
                                 <span class="caption" x-text="quote.when"></span>
                                 <span class="caption" x-show="quote.lc_note" x-text="quote.lc_note"></span>
+                                <p class="notice notice-info mt-3 mb-0" x-show="quote.pay_note" x-text="quote.pay_note"></p>
                             </div>
                         </template>
                         <p class="notice" x-show="hour === null && starts.length" x-cloak>Tidak ada jam yang tersedia untuk pilihan ini di tanggal tersebut. Pilih tanggal atau pilihan lain.</p>

@@ -77,7 +77,7 @@ return [
 
     'wa_gateways' => ['' => 'Belum dipilih (simulasi)', 'fonnte' => 'Fonnte'],
 
-    'template_vars' => ['nama', 'hp', 'kode', 'ruangan', 'unit', 'paket', 'lc', 'tanggal', 'jam', 'durasi', 'total', 'orang'],
+    'template_vars' => ['nama', 'hp', 'kode', 'ruangan', 'unit', 'paket', 'lc', 'tanggal', 'jam', 'durasi', 'total', 'orang', 'pembayaran'],
 
     'rate_limit' => [
         'reservations_per_hour' => 3,
@@ -103,7 +103,6 @@ return [
         'close' => 28,
         'day_end' => 19,
         'max_days' => 30,
-        'deposit' => 'Rp 500.000',
         'wa_display' => '0822-2041-3723',
         'wa_number' => '6282220413723',
         'wa_admin' => '082220413723',
@@ -111,8 +110,8 @@ return [
         'wa_token' => '',
         'wa_auto_status' => true,
         'tpl_admin' => "Reservasi baru masuk\nKode: {kode}\nNama: {nama} ({hp})\nRuangan: {ruangan}, {unit}\nPesanan: {paket}\nTanggal: {tanggal}\nJam: {jam}\nJumlah orang: {orang}\nTotal: {total}\n\nBuka panel admin untuk konfirmasi.",
-        'tpl_guest' => "Halo {nama}, reservasi kamu di DM Karaoke & Cafe sudah kami terima.\n\nKode: {kode}\nRuangan: {ruangan}\nPesanan: {paket}\nTanggal: {tanggal}\nJam: {jam}\nEstimasi total: {total}\n\nStatus: menunggu konfirmasi admin. Kami akan segera menghubungi kamu.",
-        'tpl_confirm' => "Halo {nama}, reservasi {kode} di DM Karaoke & Cafe sudah DIKONFIRMASI.\n\nRuangan: {ruangan}\nPesanan: {paket}\nTanggal: {tanggal}\nJam: {jam}\nTotal: {total} (dibayar di tempat)\n\nSampai jumpa!",
+        'tpl_guest' => "Halo {nama}, reservasi kamu di DM Karaoke & Cafe sudah kami terima.\n\nKode: {kode}\nRuangan: {ruangan}\nPesanan: {paket}\nTanggal: {tanggal}\nJam: {jam}\nEstimasi total: {total} ({pembayaran})\n\nStatus: menunggu konfirmasi admin. Kami akan segera menghubungi kamu.",
+        'tpl_confirm' => "Halo {nama}, reservasi {kode} di DM Karaoke & Cafe sudah DIKONFIRMASI.\n\nRuangan: {ruangan}\nPesanan: {paket}\nTanggal: {tanggal}\nJam: {jam}\nTotal: {total} ({pembayaran})\n\nSampai jumpa!",
         'tpl_reject' => 'Halo {nama}, mohon maaf reservasi {kode} untuk {tanggal} pukul {jam} belum bisa kami terima. Silakan pilih jadwal lain di website atau balas pesan ini. Terima kasih.',
         'analytics_id' => '',
         'meta_pixel_id' => '',
