@@ -57,7 +57,7 @@
 </div></section>
 
 <section class="band scroll-mt-20" id="pesan" aria-labelledby="msg-title"><div class="wrap"><div class="narrow">
-    <x-heading eyebrow="Pesan &amp; saran" title="Ceritakan <em>pengalamanmu</em>" lead="Saran, kritik, atau pertanyaan akan dibaca langsung oleh pengelola DM Karaoke." id="msg-title" />
+    <x-heading eyebrow="Pesan & Saran" title="Ceritakan <em>pengalamanmu</em>" lead="Saran, kritik, atau pertanyaan akan dibaca langsung oleh pengelola DM Karaoke." id="msg-title" />
     <div class="panel">
         @if(session('message_sent'))
             <div class="flex flex-col items-center text-center gap-3 py-12 px-6" role="status">

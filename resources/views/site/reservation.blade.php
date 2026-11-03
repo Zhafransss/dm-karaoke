@@ -11,7 +11,7 @@
 @endphp
 
 @section('content')
-<x-page-head crumb="Reservasi" eyebrow="Jadwal &amp; reservasi" title="Pilih jam yang <em>masih kosong</em>" lead="Jadwal di bawah selalu terbaru. Jam yang sudah dipesan otomatis tertulis penuh." />
+<x-page-head crumb="Reservasi" eyebrow="Jadwal & Reservasi" title="Pilih jam yang <em>masih kosong</em>" lead="Jadwal di bawah selalu terbaru. Jam yang sudah dipesan otomatis tertulis penuh." />
 
 <section class="band" x-data="reservationForm(@js($config))"><div class="wrap">
     @if($types->isEmpty())
