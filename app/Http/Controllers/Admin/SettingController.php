@@ -48,8 +48,13 @@ class SettingController extends Controller
             $errors['wa_number'] = 'Format nomor tidak valid, contoh 082220413723.';
         }
         $admins = Phone::list($data['wa_admin']);
-        if (! $admins || count($admins) > 10 || collect($admins)->contains(fn ($n) => ! Phone::valid($n))) {
-            $errors['wa_admin'] = 'Isi 1–10 nomor valid dipisah koma, contoh 082220413723, 081234567890.';
+        $invalid = collect($admins)->reject(fn ($n) => Phone::valid($n))->map(fn ($n) => Phone::normalize($n) ?: $n);
+        if (! $admins) {
+            $errors['wa_admin'] = 'Isi minimal satu nomor WhatsApp admin, contoh 082220413723.';
+        } elseif (count($admins) > 10) {
+            $errors['wa_admin'] = 'Maksimal 10 nomor WhatsApp admin.';
+        } elseif ($invalid->isNotEmpty()) {
+            $errors['wa_admin'] = 'Nomor tidak valid: '.$invalid->join(', ').'. Pakai format 08xx atau 628xx dan pisahkan dengan koma, contoh 082220413723, 081234567890.';
         }
         if ($errors) {
             return back()->withInput()->withErrors($errors);
