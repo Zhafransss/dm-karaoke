@@ -16,7 +16,7 @@
         'geo' => ['@type' => 'GeoCoordinates', 'latitude' => $biz['lat'], 'longitude' => $biz['lng']],
         'hasMap' => $biz['maps_link'], 'areaServed' => 'Kabupaten Banyumas', 'priceRange' => 'Rp40.000–Rp2.600.000',
         'openingHoursSpecification' => [['@type' => 'OpeningHoursSpecification', 'dayOfWeek' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], 'opens' => str_replace('.', ':', hl(OpHours::open())), 'closes' => str_replace('.', ':', hl(OpHours::close()))]],
-        'sameAs' => ['https://instagram.com/'.$biz['instagram']],
+        'sameAs' => ['https://instagram.com/'.$biz['instagram'], 'https://www.tiktok.com/@'.$biz['tiktok'], $biz['facebook_url']],
     ];
 @endphp
 <!doctype html>
@@ -108,6 +108,8 @@
                 <ul class="m-0 p-0 list-none flex flex-col gap-2 text-sm leading-[22px] text-ink-muted [&_a]:text-ink-muted [&_a]:no-underline [&_a:hover]:text-gold-bright">
                     <li><a href="{{ Phone::waLink('Halo DM Karaoke & Cafe, saya mau tanya.') }}" target="_blank" rel="noopener">WhatsApp {{ Settings::get('wa_display') }}</a></li>
                     <li><a href="https://instagram.com/{{ $biz['instagram'] }}" target="_blank" rel="noopener">Instagram &#64;{{ $biz['instagram'] }}</a></li>
+                    <li><a href="https://www.tiktok.com/{{ '@'.$biz['tiktok'] }}" target="_blank" rel="noopener">TikTok &#64;{{ $biz['tiktok'] }}</a></li>
+                    <li><a href="{{ $biz['facebook_url'] }}" target="_blank" rel="noopener">Facebook DM Karaoke &amp; Cafe</a></li>
                     <li><a href="{{ $biz['maps_link'] }}" target="_blank" rel="noopener">Petunjuk arah</a></li>
                     <li><a href="{{ route('kontak') }}">Kontak &amp; tentang kami</a></li>
                 </ul>

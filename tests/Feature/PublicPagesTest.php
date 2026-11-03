@@ -17,6 +17,17 @@ class PublicPagesTest extends TestCase
         $this->seedVenue();
     }
 
+    public function test_footer_links_to_all_social_accounts(): void
+    {
+        $page = $this->get('/')->assertOk();
+        $page->assertSee('href="https://instagram.com/DmKaraokeofficial"', false)
+            ->assertSee('href="https://www.tiktok.com/@dm.karaoke.cafe4"', false)
+            ->assertSee('href="https://www.facebook.com/share/14vSn3oSKq6/"', false)
+            ->assertSee('TikTok &#64;dm.karaoke.cafe4', false)->assertSee('Facebook DM Karaoke &amp; Cafe', false);
+        // also exposed to search engines
+        $page->assertSee('"https://www.tiktok.com/@dm.karaoke.cafe4"', false)->assertSee('"https://www.facebook.com/share/14vSn3oSKq6/"', false);
+    }
+
     /** Component attributes are escaped by the component, so writing "&amp;" in them shows up literally. */
     public function test_public_pages_do_not_double_escape_ampersands(): void
     {

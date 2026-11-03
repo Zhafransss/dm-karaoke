@@ -20,6 +20,8 @@ return [
         'maps_link' => 'https://www.google.com/maps/search/?api=1&query=-7.539056,109.148889',
         'maps_embed' => 'https://www.google.com/maps?q=-7.539056,109.148889&z=17&output=embed',
         'instagram' => 'DmKaraokeofficial',
+        'tiktok' => 'dm.karaoke.cafe4',
+        'facebook_url' => 'https://www.facebook.com/share/14vSn3oSKq6/',
     ],
 
     // Permissions per role (SRS §2 and §6.2). Every role can open the dashboard;
