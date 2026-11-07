@@ -113,6 +113,8 @@
                     <input type="hidden" name="package_id" :value="pkg ? pkg.id : ''">
                     <input type="hidden" name="start_hour" :value="hour ?? ''">
                     <input type="hidden" name="hours" :value="effHours()">
+                    {{-- The promo shown in the summary is the one that gets saved. --}}
+                    <input type="hidden" name="promo_id" :value="quote?.promo_id ?? ''">
 
                     <div class="field sm:col-span-2">
                         <label class="label" for="r-type">Ruangan</label>
@@ -179,7 +181,22 @@
                                 <span class="caption" x-text="quote.when"></span>
                                 <span class="caption" x-show="quote.lc_note" x-text="quote.lc_note"></span>
                                 <p class="notice notice-info mt-3 mb-0" x-show="quote.pay_note" x-text="quote.pay_note"></p>
+                                <p class="notice notice-info mt-3 mb-0" x-show="quote.promo_id">Promo dapat diterapkan ketika pelanggan dapat menunjukkan KTP pada kasir ketika pembayaran.</p>
                             </div>
+                        </template>
+                        <template x-if="quote && quote.promos.length > 1">
+                            <fieldset class="mt-4 border-0 p-0 min-w-0">
+                                <legend class="label mb-1">Pilih promo</legend>
+                                <p class="caption m-0 mb-2">Ada beberapa promo untuk pilihanmu. Satu reservasi memakai satu promo; yang paling hemat sudah dipilih.</p>
+                                <div class="flex flex-col gap-1.5">
+                                    <template x-for="o in quote.promos" :key="o.id">
+                                        <label class="check justify-between gap-3">
+                                            <span class="flex items-center gap-2 min-w-0"><input type="radio" name="promo_choice" :value="o.id" :checked="quote.promo_id === o.id" @change="choosePromo(o.id)"> <span x-text="o.name + (o.note ? ` (${o.note})` : '')"></span></span>
+                                            <b class="text-gold whitespace-nowrap" x-text="o.amount"></b>
+                                        </label>
+                                    </template>
+                                </div>
+                            </fieldset>
                         </template>
                         <p class="notice" x-show="hour === null && starts.length" x-cloak>Tidak ada jam yang tersedia untuk pilihan ini di tanggal tersebut. Pilih tanggal atau pilihan lain.</p>
                     </div>

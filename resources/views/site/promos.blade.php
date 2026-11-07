@@ -15,6 +15,6 @@
         <h2 class="sub-h mt-16">Segera hadir</h2>
         <div class="grid gap-6 lg:grid-cols-2">@foreach($soon as $p)<x-promo-card :promo="$p" />@endforeach</div>
     @endif
-    <p class="caption text-center mt-8">Satu reservasi memakai satu promo. Harga promo mengikuti tanggal dan jam kunjungan, bukan tanggal pemesanan.</p>
+    <p class="caption text-center mt-8">Satu reservasi memakai satu promo. Bila ada beberapa promo yang berlaku, yang paling hemat otomatis terpasang dan kamu bisa menggantinya. Harga promo mengikuti tanggal dan jam kunjungan, bukan tanggal pemesanan.</p>
 </div></section>
 @endsection

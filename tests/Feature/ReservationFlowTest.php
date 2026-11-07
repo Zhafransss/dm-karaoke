@@ -231,6 +231,42 @@ class ReservationFlowTest extends TestCase
         $this->assertSame(60000 + 120000 * 3 - 60000, Reservation::firstOrFail()->total);
     }
 
+    public function test_t28b_guest_picks_one_of_several_promos_and_that_one_is_stored(): void
+    {
+        $range = ['date_start' => '2026-11-01', 'date_end' => '2026-11-30'];
+        $three = $this->promo(['name' => '3 bayar 2', 'kind' => 'bayar_x', 'x' => 3, 'y' => 2, ...$range], [$this->vip->rentKey()]);
+        $four = $this->promo(['name' => '4 bayar 2', 'kind' => 'bayar_x', 'x' => 4, 'y' => 2, ...$range], [$this->vip->rentKey()]);
+        $ask = ['room_type_id' => $this->vip->id, 'date' => self::DATE, 'start_hour' => 18, 'hours' => 4, 'lc' => false];
+
+        $auto = $this->postJson('/reservasi/harga', $ask)->assertOk();
+        $this->assertSame($four->id, $auto->json('promo_id'));
+        $this->assertSame([$four->id, $three->id], array_column($auto->json('promos'), 'id'));
+
+        $picked = $this->postJson('/reservasi/harga', [...$ask, 'promo_id' => $three->id])->assertOk();
+        $this->assertSame($three->id, $picked->json('promo_id'));
+
+        $this->post('/reservasi', $this->payload(['start_hour' => 18, 'hours' => 4, 'promo_id' => $three->id]))->assertRedirect();
+        $r = Reservation::firstOrFail();
+        $this->assertSame($three->id, $r->promo_id);
+        $this->assertSame($picked->json('total_raw'), $r->total);
+    }
+
+    public function test_admin_can_save_and_activate_overlapping_promos(): void
+    {
+        $admin = User::factory()->role('super_admin')->create();
+        $this->promo(['name' => '3 bayar 2', 'kind' => 'bayar_x', 'x' => 3, 'y' => 2, 'date_start' => '2026-11-01', 'date_end' => '2026-11-18'], [$this->std->rentKey(), $this->vip->rentKey()]);
+        $form = ['name' => '4 bayar 2', 'kind' => 'bayar_x', 'x' => 4, 'y' => 2, 'date_start' => '2026-11-01', 'date_end' => '2026-11-30', 'targets' => [$this->vip->rentKey()]];
+
+        $this->actingAs($admin)->post('/admin/promo', [...$form, 'active' => 1])->assertRedirect('/admin/promo')->assertSessionHasNoErrors();
+        $this->actingAs($admin)->postJson('/admin/promo/pratinjau', [...$form, 'active' => true])
+            ->assertOk()->assertJsonPath('overlaps.0.name', '3 bayar 2');
+
+        $draft = \App\Models\Promo::create(['name' => 'Draf', 'kind' => 'persen', 'value' => 10, 'date_start' => '2026-11-01', 'date_end' => '2026-11-30', 'active' => false]);
+        $draft->syncTargets([$this->vip->rentKey()]);
+        $this->actingAs($admin)->post("/admin/promo/{$draft->id}/toggle")->assertSessionHasNoErrors();
+        $this->assertTrue($draft->fresh()->active);
+    }
+
     public function test_t29_rate_change_does_not_touch_existing_reservation(): void
     {
         $r = $this->book();

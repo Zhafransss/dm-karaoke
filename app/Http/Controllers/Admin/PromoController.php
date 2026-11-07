@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
-/** Promo CMS with overlap validation and live preview (FR-ADM-12, FR-ADM-13). */
+/** Promo CMS with live preview and overlap information (FR-ADM-12, FR-ADM-13). */
 class PromoController extends Controller
 {
     public function __construct(private PromoService $promos) {}
@@ -54,17 +54,7 @@ class PromoController extends Controller
 
     public function toggle(Promo $promo)
     {
-        $promo->load('targetRows');
-        if (! $promo->active) {
-            $promo->active = true;
-            $conflicts = $this->promos->conflicts($promo);
-            if ($conflicts->isNotEmpty()) {
-                return back()->withErrors(['conflict' => "\"{$promo->name}\" tidak bisa diaktifkan karena beririsan dengan: ".$conflicts->pluck('name')->join(', ').'.']);
-            }
-        } else {
-            $promo->active = false;
-        }
-        $promo->save();
+        $promo->update(['active' => ! $promo->active]);
 
         return back()->with('ok', $promo->name.($promo->active ? ' diaktifkan.' : ' dinonaktifkan.'));
     }
@@ -76,7 +66,7 @@ class PromoController extends Controller
         return redirect()->route('admin.promo.index')->with('ok', 'Promo dihapus. Reservasi yang sudah memakai promo ini tetap menyimpan harganya.');
     }
 
-    /** Example calculation + conflicts for the form, using the real PricingService. */
+    /** Example calculation + overlapping promos for the form, using the real PricingService. */
     public function preview(Request $request, PricingService $pricing)
     {
         $p = $this->fromRequest($request, $request->input('id') ? Promo::find($request->input('id')) : null);
@@ -96,9 +86,9 @@ class PromoController extends Controller
                     .($q['discount'] > 0 ? '' : ' (promo tidak berlaku di contoh ini)').($q['promo_note'] ? " ({$q['promo_note']})" : '');
             }
         }
-        $conflicts = ($p->ds() && $p->de() && $p->de() >= $p->ds()) ? $this->conflictRows($p) : [];
+        $overlaps = ($p->ds() && $p->de() && $p->de() >= $p->ds()) ? $this->overlapRows($p) : [];
 
-        return response()->json(['preview' => $preview, 'conflicts' => $conflicts]);
+        return response()->json(['preview' => $preview, 'overlaps' => $overlaps]);
     }
 
     private function save(Request $request, Promo $promo)
@@ -125,10 +115,6 @@ class PromoController extends Controller
         $invalid = Package::with('roomType')->whereIn('id', $pkgIds)->get()->reject(fn (Package $pk) => $p->packageEligible($pk));
         if ($invalid->isNotEmpty()) {
             throw ValidationException::withMessages(['targets' => "Promo bayar {$p->x} jam hanya untuk paket minimal {$p->x} jam (bukan Paket Family atau Master Room). Lepas centang: ".$invalid->pluck('name')->join(', ').'.']);
-        }
-        $conflicts = $this->promos->conflicts($p);
-        if ($conflicts->isNotEmpty()) {
-            return back()->withInput()->withErrors(['conflict' => 'Bentrok dengan promo aktif lain di target yang sama: '.$conflicts->pluck('name')->join(', ').'. Ubah tanggal, jam, atau target, atau simpan sebagai nonaktif dulu.']);
         }
         $targets = $p->targets();
         $p->pendingTargets = null;
@@ -167,11 +153,11 @@ class PromoController extends Controller
         return is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) ? $value : OpHours::today();
     }
 
-    private function conflictRows(Promo $p): array
+    private function overlapRows(Promo $p): array
     {
         $labels = $this->promos->targetLabels();
 
-        return $this->promos->conflicts($p)->map(fn (Promo $q) => [
+        return $this->promos->overlaps($p)->map(fn (Promo $q) => [
             'name' => $q->name,
             'targets' => collect(array_intersect($q->targets(), $p->targets()))->map(fn ($k) => $labels[$k] ?? $k)->join(', '),
             'period' => $q->periodLabel(),

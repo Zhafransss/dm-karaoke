@@ -13,7 +13,7 @@
 <div class="grid gap-2 sm:gap-4 grid-cols-3">
     <div class="stat"><b>{{ $n('berjalan') }}</b><span>Berjalan</span></div><div class="stat"><b>{{ $n('terjadwal') }}</b><span>Terjadwal</span></div><div class="stat"><b>{{ $n('nonaktif') }}</b><span>Nonaktif</span></div>
 </div>
-<p class="caption m-0">Aturan: satu promo per transaksi. Pada target yang sama (sewa satu ruangan atau satu paket) tidak boleh ada dua promo aktif yang periode dan jamnya beririsan. Promo berlaku bila sakelar aktif dan tanggal kunjungan masuk periode.</p>
+<p class="caption m-0">Aturan: satu promo per transaksi. Beberapa promo boleh aktif bersamaan di target yang sama, misalnya promo bertingkat "3 jam bayar 2" dan "4 jam bayar 2". Tamu otomatis mendapat potongan terbesar dan bisa memilih promo lain yang berlaku. Promo berlaku bila sakelar aktif dan tanggal kunjungan masuk periode.</p>
 @forelse($list as $p)
     @php($st = $p->state($today)) @php([$big, $unit] = $p->figure())
     @php($names = collect($p->targets())->map(fn ($k) => $labels[$k] ?? null)->filter())

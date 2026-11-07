@@ -7,6 +7,7 @@ use App\Services\AvailabilityService;
 use App\Services\PricingService;
 use App\Services\PromoService;
 use App\Support\OpHours;
+use App\Support\QuotePresenter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\SeedsVenue;
 use Tests\TestCase;
@@ -169,35 +170,73 @@ class PricingServiceTest extends TestCase
         $this->assertSame(240000, $q['total']);
     }
 
-    public function test_t13_only_one_promo_and_window_containing_start_wins(): void
+    public function test_t13_one_promo_biggest_discount_wins_and_guest_can_switch(): void
     {
         $early = $this->promo(['name' => 'Sore', 'kind' => 'persen', 'value' => 10, 'date_start' => '2026-11-01', 'date_end' => '2026-11-30', 'time_start' => 14, 'time_end' => 17], [$this->vip->rentKey()]);
         $late = $this->promo(['name' => 'Malam', 'kind' => 'persen', 'value' => 20, 'date_start' => '2026-11-01', 'date_end' => '2026-11-30', 'time_start' => 20, 'time_end' => 23], [$this->vip->rentKey()]);
 
-        $q = $this->price($this->vip, null, 16, 5); // 16..20, touches both windows
-        $this->assertSame($early->id, $q['promo_id']);
-
-        $q = $this->price($this->vip, null, 20, 2);
+        // 16..20 touches both windows: Sore 10% of 16.00 (6k), Malam 20% of 20.00 (24k).
+        $q = $this->price($this->vip, null, 16, 5);
         $this->assertSame($late->id, $q['promo_id']);
+        $this->assertSame(24000, $q['discount']);
+        $this->assertSame([$late->id, $early->id], array_column($q['promo_options'], 'id'));
+
+        $q = app(PricingService::class)->calculate($this->vip, null, self::DATE, 16, 5, false, chosen: $early->id);
+        $this->assertSame($early->id, $q['promo_id']);
+        $this->assertSame(6000, $q['discount']);
+
+        // A pick that does not apply falls back to the biggest discount.
+        $q = app(PricingService::class)->calculate($this->vip, null, self::DATE, 20, 2, false, chosen: $early->id);
+        $this->assertSame($late->id, $q['promo_id']);
+        $this->assertCount(1, $q['promo_options']);
     }
 
-    public function test_t14_overlapping_active_promo_on_same_target_is_detected(): void
+    public function test_t13b_tiered_pay_x_promos_pick_the_tier_that_fits(): void
+    {
+        $range = ['date_start' => '2026-11-01', 'date_end' => '2026-11-30'];
+        $three = $this->promo(['name' => '3 bayar 2', 'kind' => 'bayar_x', 'x' => 3, 'y' => 2, ...$range], [$this->vip->rentKey()]);
+        $four = $this->promo(['name' => '4 bayar 2', 'kind' => 'bayar_x', 'x' => 4, 'y' => 2, ...$range], [$this->vip->rentKey()]);
+
+        // 3 hours: only the 3-hour tier fits.
+        $q = $this->price($this->vip, null, 20, 3);
+        $this->assertSame($three->id, $q['promo_id']);
+        $this->assertSame(360000 - 120000, $q['total']);
+        $this->assertCount(1, $q['promo_options']);
+
+        // 4 hours from 18.00 (60k day + 3 × 120k): "4 bayar 2" frees 60k + 120k, "3 bayar 2" only 60k.
+        $q = $this->price($this->vip, null, 18, 4);
+        $this->assertSame($four->id, $q['promo_id']);
+        $this->assertSame(180000, $q['discount']);
+        $this->assertSame([$four->id, $three->id], array_column($q['promo_options'], 'id'));
+    }
+
+    public function test_t14_overlapping_active_promos_are_listed_as_information(): void
     {
         $existing = $this->promo(['name' => 'A', 'kind' => 'persen', 'value' => 10, 'date_start' => '2026-11-01', 'date_end' => '2026-11-15'], [$this->vip->rentKey()]);
 
         $new = new Promo(['name' => 'B', 'kind' => 'nominal', 'value' => 50000, 'date_start' => '2026-11-10', 'date_end' => '2026-11-20', 'active' => true]);
         $new->pendingTargets = [$this->vip->rentKey(), $this->std->rentKey()];
-        $this->assertSame([$existing->id], app(PromoService::class)->conflicts($new)->pluck('id')->all());
+        $this->assertSame([$existing->id], app(PromoService::class)->overlaps($new)->pluck('id')->all());
 
-        // Same target but hours do not overlap -> allowed
+        // Same target but hours do not overlap
         $existing->update(['time_start' => 14, 'time_end' => 17]);
         $new->time_start = 20;
         $new->time_end = 23;
-        $this->assertCount(0, app(PromoService::class)->conflicts($new));
+        $this->assertCount(0, app(PromoService::class)->overlaps($new));
 
-        // Inactive promos never conflict
+        // Inactive promos never overlap
         $new->active = false;
-        $this->assertCount(0, app(PromoService::class)->conflicts($new));
+        $this->assertCount(0, app(PromoService::class)->overlaps($new));
+    }
+
+    public function test_promo_row_does_not_repeat_the_word_promo(): void
+    {
+        $label = fn (string $name) => collect(QuotePresenter::rows([], 'sewa', $name, null, 10000))->firstWhere('discount', true)['text'];
+
+        $this->assertSame('Promo Ulang Tahun', $label('Promo Ulang Tahun'));
+        $this->assertSame('PROMO Akhir Tahun', $label('PROMO Akhir Tahun'));
+        $this->assertSame('Promo Sewa 3 Jam Bayar 2 Jam', $label('Sewa 3 Jam Bayar 2 Jam'));
+        $this->assertSame('Promo Promosi Pelajar', $label('Promosi Pelajar'));
     }
 
     public function test_t15_visit_date_outside_promo_period(): void

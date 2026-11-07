@@ -56,6 +56,7 @@ class ReservationController extends Controller
                     'hour' => old('start_hour', $request->query('jam')) !== null ? (int) old('start_hour', $request->query('jam')) : null,
                     'hours' => (int) old('hours', 2),
                     'lc' => (bool) old('lc', false),
+                    'promoId' => old('promo_id') ? (int) old('promo_id') : null,
                 ],
                 'types' => $types->map(fn (RoomType $t) => [
                     'id' => $t->id, 'name' => $t->name, 'rentable' => $t->rentable, 'cap' => $t->publicCap(), 'maxPax' => $t->maxPax(),
@@ -130,13 +131,14 @@ class ReservationController extends Controller
         $in = $request->validate([
             'room_type_id' => ['required', 'integer'], 'package_id' => ['nullable', 'integer'], 'date' => ['required', 'date_format:Y-m-d'],
             'start_hour' => ['required', 'integer', 'between:0,40'], 'hours' => ['required', 'integer', 'between:1,24'], 'lc' => ['boolean'],
+            'promo_id' => ['nullable', 'integer'],
         ]);
         $type = RoomType::findOrFail($in['room_type_id']);
         $pkg = ! empty($in['package_id']) ? Package::findOrFail($in['package_id']) : null;
         if ($err = $this->availability->ruleError($type, $pkg, $in['date'], $in['start_hour'], $in['hours'])) {
             return response()->json(['message' => $err], 422);
         }
-        $q = $pricing->calculate($type, $pkg, $in['date'], $in['start_hour'], $in['hours'], (bool) ($in['lc'] ?? false));
+        $q = $pricing->calculate($type, $pkg, $in['date'], $in['start_hour'], $in['hours'], (bool) ($in['lc'] ?? false), chosen: $in['promo_id'] ?? null);
 
         return response()->json(QuotePresenter::forQuote($q, $in['date'], $in['start_hour'], $type));
     }
@@ -151,6 +153,7 @@ class ReservationController extends Controller
             'start_hour' => ['required', 'integer'],
             'hours' => ['required', 'integer', 'between:1,'.config('dmk.max_rent_hours')],
             'lc' => ['nullable', 'boolean'],
+            'promo_id' => ['nullable', 'integer'],
             'name' => ['required', 'string', 'max:100'],
             'phone' => ['required', 'string', 'max:20', function ($attr, $value, $fail) {
                 if (! Phone::valid($value)) {
@@ -177,7 +180,7 @@ class ReservationController extends Controller
         }
 
         try {
-            $r = $service->create([...$data, 'lc' => $request->boolean('lc'), 'package_id' => $data['package_id'] ?? null], 'online', null, $request->ip());
+            $r = $service->create([...$data, 'lc' => $request->boolean('lc'), 'package_id' => $data['package_id'] ?? null, 'promo_id' => $data['promo_id'] ?? null], 'online', null, $request->ip());
         } catch (BookingException $e) {
             return back()->withInput()->withErrors(['booking' => $e->getMessage()]);
         }

@@ -6,7 +6,7 @@ use App\Models\Promo;
 use App\Models\RoomType;
 use Illuminate\Support\Collection;
 
-/** Promo selection and overlap validation (SRS §4.6). */
+/** Promo lookup and overlap information (SRS §4.6). */
 class PromoService
 {
     private ?Collection $active = null;
@@ -42,10 +42,10 @@ class PromoService
     }
 
     /**
-     * One promo per transaction: candidates must touch at least one booked hour;
-     * prefer the one whose window contains the start hour, then the earliest window.
+     * Promos that may discount a booking: they must touch at least one booked hour.
+     * Ordered for ties between equal discounts: window containing the start hour first, then the earliest window.
      */
-    public function pick(string $key, string $date, int $hour, int $hours): ?Promo
+    public function candidates(string $key, string $date, int $hour, int $hours): Collection
     {
         return $this->forTarget($key, $date)
             ->filter(function (Promo $p) use ($hour, $hours) {
@@ -62,14 +62,15 @@ class PromoService
 
                 return $byStart ?: (($a->time_start ?? 0) <=> ($b->time_start ?? 0)) ?: ($a->id <=> $b->id);
             })
-            ->first();
+            ->values();
     }
 
     /**
      * Other active promos that share a target and overlap in dates and hours (FR-ADM-13).
+     * Overlaps are allowed (tiered promos); the admin form only shows them as information.
      * $promo may be unsaved; its targets come from pendingTargets.
      */
-    public function conflicts(Promo $promo): Collection
+    public function overlaps(Promo $promo): Collection
     {
         if (! $promo->active) {
             return collect();

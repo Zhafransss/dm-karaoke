@@ -20,7 +20,9 @@ class QuotePresenter
                     : ['text' => $l['hours'].' jam dengan deposit', 'tag' => $l['label'], 'amount' => trim('Deposit '.($type?->depositLabel() ?? '')), 'discount' => false]);
         }
         if ($promoName && $discount > 0) {
-            $rows[] = ['text' => 'Promo '.$promoName.($promoNote ? " ({$promoNote})" : ''), 'tag' => '', 'amount' => '−'.rp($discount), 'discount' => true];
+            // "Promo Ulang Tahun" stays as is; "Sewa 3 Jam Bayar 2 Jam" becomes "Promo Sewa 3 Jam Bayar 2 Jam".
+            $label = preg_match('/^promo\b/iu', $promoName) ? $promoName : 'Promo '.$promoName;
+            $rows[] = ['text' => $label.($promoNote ? " ({$promoNote})" : ''), 'tag' => '', 'amount' => '−'.rp($discount), 'discount' => true];
         }
 
         return $rows;
@@ -38,6 +40,9 @@ class QuotePresenter
             'when' => tgl($date).' · '.OpHours::range($hour, $q['hours']).'. '.($type?->paymentNote() ?? 'Dibayar di tempat.'),
             'lc_note' => $freeLc && $type && ! $type->prepaid ? $type->depositText().' Deposit tidak termasuk total.' : '',
             'pay_note' => $type?->prepaid ? "{$type->name} wajib lunas di awal (tanpa deposit). Jadwalmu dikonfirmasi admin setelah pembayaran lunas." : '',
+            // The applied promo and every promo the guest may switch to (one per reservation).
+            'promo_id' => $q['promo_id'],
+            'promos' => array_map(fn ($o) => ['id' => $o['id'], 'name' => $o['name'], 'amount' => '−'.rp($o['discount']), 'note' => $o['note']], $q['promo_options'] ?? []),
         ];
     }
 }

@@ -18,11 +18,15 @@ class PricingService
     public function __construct(private PromoService $promos) {}
 
     /**
+     * $forced prices one given promo (admin preview). $chosen is the promo the guest picked;
+     * it is used only while it still discounts this booking.
+     *
      * @return array{mode:string, package_id:?int, package_name:?string, lc:bool, hours:int,
      *               lines:array, base:int, promo_id:?int, promo_name:?string, promo_note:string,
-     *               eligible_hours:int, discount:int, total:int}
+     *               eligible_hours:int, discount:int, total:int,
+     *               promo_options:array<int, array{id:int, name:string, discount:int, note:string}>}
      */
-    public function calculate(RoomType $type, ?Package $pkg, string $date, int $hour, int $hours, bool $lc, ?Promo $forced = null): array
+    public function calculate(RoomType $type, ?Package $pkg, string $date, int $hour, int $hours, bool $lc, ?Promo $forced = null, ?int $chosen = null): array
     {
         if (! $pkg && ! $type->rentable) {
             throw new InvalidArgumentException("{$type->name} hanya tersedia dalam bentuk paket.");
@@ -51,9 +55,17 @@ class PricingService
             $base = array_sum(array_column($perHour, 'rate'));
         }
 
-        $promo = $forced ?? $this->promos->pick($pkg ? $pkg->pkgKey() : $type->rentKey(), $date, $hour, $hours);
-        [$discount, $eligible, $note] = $promo ? $this->discount($promo, $type, $pkg, $perHour, $hour, $hours) : [0, 0, ''];
-        $used = $promo && $discount > 0;
+        // One promo per transaction: every promo that discounts this booking is an option;
+        // the guest's choice wins, otherwise the biggest discount (ties keep the candidates' order).
+        $candidates = $forced ? collect([$forced]) : $this->promos->candidates($pkg ? $pkg->pkgKey() : $type->rentKey(), $date, $hour, $hours);
+        $options = $candidates
+            ->map(fn (Promo $p) => ['promo' => $p, ...array_combine(['discount', 'eligible', 'note'], $this->discount($p, $type, $pkg, $perHour, $hour, $hours))])
+            ->filter(fn ($o) => $o['discount'] > 0)
+            ->sortByDesc('discount')
+            ->values();
+        $pick = $options->first(fn ($o) => $o['promo']->id === $chosen) ?? $options->first();
+        [$promo, $discount, $eligible, $note] = $pick ? [$pick['promo'], $pick['discount'], $pick['eligible'], $pick['note']] : [null, 0, 0, ''];
+        $used = $promo !== null;
 
         return [
             'mode' => $pkg ? 'paket' : 'sewa',
@@ -69,6 +81,7 @@ class PricingService
             'eligible_hours' => $used ? $eligible : 0,
             'discount' => $used ? $discount : 0,
             'total' => max(0, $base - ($used ? $discount : 0)),
+            'promo_options' => $options->map(fn ($o) => ['id' => $o['promo']->id, 'name' => $o['promo']->name, 'discount' => $o['discount'], 'note' => $o['note']])->all(),
         ];
     }
 

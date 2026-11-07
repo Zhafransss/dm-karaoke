@@ -27,7 +27,7 @@ class ReservationService
      * Create a reservation atomically (FR-RES-09/10/11, NFR-03).
      *
      * @param  array{room_type_id:int, package_id:?int, date:string, start_hour:int, hours:int, lc:bool,
-     *               pax:int, name:string, phone:?string, note:?string, room_id?:?int, status?:string}  $in
+     *               pax:int, name:string, phone:?string, note:?string, room_id?:?int, status?:string, promo_id?:?int}  $in
      */
     public function create(array $in, string $source = 'online', ?User $by = null, ?string $ip = null): Reservation
     {
@@ -63,7 +63,7 @@ class ReservationService
                 );
             }
 
-            $quote = $this->pricing->calculate($type, $pkg, $date, $hour, $hours, (bool) ($in['lc'] ?? false));
+            $quote = $this->pricing->calculate($type, $pkg, $date, $hour, $hours, (bool) ($in['lc'] ?? false), chosen: $in['promo_id'] ?? null);
             $status = $asAdmin ? ($in['status'] ?? 'dikonfirmasi') : 'menunggu';
 
             $r = Reservation::create([
@@ -160,7 +160,8 @@ class ReservationService
             $changes = ['room_id' => $room->id, 'date' => $date, 'start_hour' => $hour];
             $note = '';
             if ($reprice && ($date !== $r->ymd() || $hour !== $r->start_hour)) {
-                $q = $this->pricing->calculate($type, $pkg, $date, $hour, $hours, $r->lc);
+                // Keep the guest's promo when it still applies at the new time.
+                $q = $this->pricing->calculate($type, $pkg, $date, $hour, $hours, $r->lc, chosen: $r->promo_id);
                 $changes += [
                     'base' => $q['base'], 'discount' => $q['discount'], 'total' => $q['total'], 'promo_id' => $q['promo_id'],
                     'promo_name' => $q['promo_name'], 'promo_note' => $q['promo_note'] ?: null, 'price_lines' => $q['lines'],

@@ -61,10 +61,10 @@
         <div class="flex flex-col gap-1 px-4 py-3 border border-line rounded-sm bg-bg text-sm leading-[22px] text-ink-muted" x-show="preview" x-cloak>
             <span class="label !text-ink-subtle">Contoh perhitungan</span><span x-text="preview"></span>
         </div>
-        <div class="notice" x-show="conflicts.length" x-cloak>
-            <b>Bentrok dengan promo aktif lain di target yang sama:</b>
-            <ul class="my-2 pl-5"><template x-for="c in conflicts" :key="c.name"><li><b x-text="c.name"></b> · <span x-text="c.targets"></span> · <span x-text="c.period"></span></li></template></ul>
-            <span>Ubah tanggal, jam, atau target, atau simpan sebagai nonaktif dulu.</span>
+        <div class="notice notice-info" x-show="overlaps.length" x-cloak>
+            <b>Promo aktif lain juga berlaku di target dan waktu yang sama:</b>
+            <ul class="my-2 pl-5"><template x-for="o in overlaps" :key="o.name"><li><b x-text="o.name"></b> · <span x-text="o.targets"></span> · <span x-text="o.period"></span></li></template></ul>
+            <span>Boleh, misalnya untuk promo bertingkat. Tamu tetap memakai satu promo per reservasi: otomatis yang potongannya terbesar, dan bisa diganti ke promo lain yang berlaku.</span>
         </div>
     </div>
     <div class="md:col-span-2 flex justify-end gap-3">

@@ -92,6 +92,7 @@ Alpine.data('reservationForm', (cfg) => ({
         const t = this.promoTarget(p);
         if (!t) return;
         this.pendingPromo = p;
+        this.promoId = p.id;
         const same = +this.typeId === t.typeId && String(this.mode) === t.mode;
         this.typeId = t.typeId;
         this.mode = t.mode;
@@ -126,11 +127,16 @@ Alpine.data('reservationForm', (cfg) => ({
             this.loading = false;
         }
     },
+    /* One promo per reservation. promoId is the guest's pick; the server falls back to the biggest discount when it does not apply. */
+    choosePromo(id) {
+        this.promoId = id;
+        this.price();
+    },
     async price() {
         if (this.hour === null) { this.quote = null; return; }
         const { ok, data } = await postJson(cfg.urls.price, {
             room_type_id: this.typeId, package_id: this.pkg?.id ?? null, date: this.date,
-            start_hour: this.hour, hours: this.effHours(), lc: !!this.lc,
+            start_hour: this.hour, hours: this.effHours(), lc: !!this.lc, promo_id: this.promoId,
         });
         this.quote = ok ? data : null;
         if (!ok) this.error = data.message;
@@ -197,13 +203,13 @@ Alpine.data('moveForm', (cfg) => ({
 }));
 
 /*
- * Admin promo form: live example calculation and overlap warning (FR-ADM-12/13).
+ * Admin promo form: live example calculation and overlapping promos (FR-ADM-12/13).
  * Uses $root, not $el: when a method runs from @click, $el is the clicked button, not the form.
  */
 Alpine.data('promoForm', (cfg) => ({
     ...cfg.state,
     preview: '',
-    conflicts: [],
+    overlaps: [],
     init() {
         this.$nextTick(() => this.refresh());
         this.$root.addEventListener('change', () => this.$nextTick(() => this.refresh()));
@@ -221,7 +227,7 @@ Alpine.data('promoForm', (cfg) => ({
         body.active = this.$root.querySelector('[name="active"]')?.checked ?? false;
         const { data } = await postJson(cfg.urls.preview, body);
         this.preview = data.preview || '';
-        this.conflicts = data.conflicts || [];
+        this.overlaps = data.overlaps || [];
     },
 }));
 
