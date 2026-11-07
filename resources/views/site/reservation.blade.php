@@ -79,7 +79,7 @@
                     <p class="m-0 caption" x-show="!promos.length">Tidak ada promo yang berlaku di tanggal ini.</p>
                     <div class="flex flex-col gap-3" x-show="promos.length">
                         <template x-for="p in promos" :key="p.id">
-                            <article class="grid gap-3 md:gap-6 md:grid-cols-[112px_minmax(0,1fr)] items-center p-4 border rounded-md cursor-pointer transition-colors hover:border-gold-deep" :class="[promoFits(p) ? 'border-gold' : 'border-line', quote?.promo_id === p.id ? 'bg-gold-soft' : 'bg-surface-raised']"
+                            <article class="grid gap-3 md:gap-6 md:grid-cols-[112px_minmax(0,1fr)] items-center p-4 border rounded-md cursor-pointer transition-colors hover:border-gold-deep" :class="quote?.promo_id === p.id ? 'border-gold bg-gold-soft' : 'border-line bg-surface-raised'"
                                 role="button" tabindex="0" :aria-label="`Pakai promo ${p.name}`"
                                 @click="applyPromo(p)" @keydown.enter.prevent="applyPromo(p)" @keydown.space.prevent="applyPromo(p)">
                                 <div class="flex md:flex-col items-center md:justify-center gap-3 md:gap-1 md:w-[112px] md:h-24 px-4 py-3 md:p-1.5 bg-gold-soft border border-gold-deep rounded-sm text-center">
