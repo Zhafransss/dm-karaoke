@@ -11,6 +11,7 @@ use App\Models\Promo;
 use App\Models\RoomType;
 use App\Services\PromoService;
 use App\Support\OpHours;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
@@ -132,17 +133,33 @@ class SiteController extends Controller
 
     public function sitemap()
     {
-        $urls = collect(['home', 'harga', 'reservasi', 'promo', 'event', 'galeri', 'kontak'])
-            ->map(fn ($r) => ['loc' => route($r), 'lastmod' => null]);
-        RoomType::active()->get(['slug', 'updated_at'])->each(fn ($t) => $urls->push(['loc' => route('ruangan.show', $t->slug), 'lastmod' => $t->updated_at?->toDateString()]));
-        Event::published()->get(['slug', 'updated_at'])->each(fn ($e) => $urls->push(['loc' => route('event.show', $e->slug), 'lastmod' => $e->updated_at?->toDateString()]));
+        // lastmod = newest change among the content a page shows; pages without such content get none.
+        $latest = fn (string ...$models) => collect($models)->map(fn ($m) => $m::max('updated_at'))->filter()->map(fn ($d) => Carbon::parse($d))->max()?->toDateString();
+        $url = fn (string $loc, ?string $lastmod = null, array $images = []) => ['loc' => $loc, 'lastmod' => $lastmod, 'images' => $images];
+
+        $galleryImages = GalleryItem::where('published', true)->whereNotNull('image')->orderBy('sort')->limit(200)->get()->map(fn ($g) => upload_url($g->image))->all();
+        $urls = collect([
+            $url(route('home'), $latest(RoomType::class, Promo::class, Event::class, GalleryItem::class)),
+            $url(route('harga'), $latest(RoomType::class, Package::class)),
+            $url(route('reservasi')),
+            $url(route('promo'), $latest(Promo::class)),
+            $url(route('event'), $latest(Event::class)),
+            $url(route('galeri'), $latest(GalleryItem::class), $galleryImages),
+            $url(route('kontak')),
+        ]);
+        RoomType::active()->with('media')->get()->each(fn ($t) => $urls->push($url(
+            route('ruangan.show', $t->slug), $t->updated_at?->toDateString(), $t->galleryItems()->where('type', 'image')->pluck('src')->all()
+        )));
+        Event::published()->get()->each(fn ($e) => $urls->push($url(
+            route('event.show', $e->slug), $e->updated_at?->toDateString(), $e->image ? [upload_url($e->image)] : []
+        )));
 
         return response()->view('site.sitemap', ['urls' => $urls])->header('Content-Type', 'application/xml');
     }
 
     public function robots()
     {
-        $body = "User-agent: *\nDisallow: /admin\nDisallow: /cek-status\nDisallow: /reservasi/ketersediaan\n\nSitemap: ".route('sitemap')."\n";
+        $body = "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /cek-status\nDisallow: /reservasi/ketersediaan\nDisallow: /reservasi/harga\n\nSitemap: ".route('sitemap')."\n";
 
         return response($body)->header('Content-Type', 'text/plain');
     }

@@ -1,7 +1,9 @@
 @extends('layouts.public', [
     'nav' => 'event',
     'title' => $event->title.' | DM Karaoke & Cafe',
-    'description' => $event->excerpt(150),
+    'description' => \App\Support\Seo::eventDescription($event),
+    'breadcrumbs' => [['Event', route('event')], [$event->title, route('event.show', $event->slug)]],
+    'schema' => \App\Support\Seo::eventSchema($event),
     'ogImage' => $event->image ? upload_url($event->image) : null,
 ])
 

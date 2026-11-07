@@ -3,13 +3,13 @@
     use App\Support\Phone;
     use App\Support\Settings;
     $biz = config('dmk.business');
-    $title = $title ?? 'DM Karaoke & Cafe | Karaoke & Cafe di Rawalo, Banyumas';
-    $description = $description ?? 'Ruang karaoke privat dan cafe di Jl. Raya Margasana, Rawalo, Banyumas. Cek jadwal kosong dan reservasi online.';
+    $title = $title ?? 'Karaoke di Rawalo, Banyumas | DM Karaoke & Cafe';
+    $description = $description ?? 'Ruang karaoke privat dan cafe di Rawalo, Banyumas. Sewa per jam atau paket, cek jam kosong lalu reservasi online di DM Karaoke & Cafe.';
     $nav = $nav ?? null;
     $openLabel = hl(OpHours::open()).'–'.hl(OpHours::close());
     $links = ['home' => 'Beranda', 'harga' => 'Harga', 'reservasi' => 'Reservasi', 'promo' => 'Promo', 'event' => 'Event', 'galeri' => 'Galeri', 'kontak' => 'Kontak'];
     $ld = [
-        '@context' => 'https://schema.org', '@type' => 'EntertainmentBusiness', 'name' => $biz['name'],
+        '@context' => 'https://schema.org', '@type' => 'EntertainmentBusiness', '@id' => route('home').'#business', 'name' => $biz['name'],
         'description' => 'Tempat karaoke privat dan cafe di Rawalo, Banyumas.', 'url' => route('home'),
         'image' => asset('images/logo-full.webp'), 'logo' => asset('images/logo-full.webp'), 'telephone' => '+'.Settings::get('wa_number'),
         'address' => ['@type' => 'PostalAddress', 'streetAddress' => $biz['street'], 'addressLocality' => $biz['locality'], 'addressRegion' => $biz['region'], 'postalCode' => $biz['postal_code'], 'addressCountry' => 'ID'],
@@ -18,6 +18,16 @@
         'openingHoursSpecification' => [['@type' => 'OpeningHoursSpecification', 'dayOfWeek' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], 'opens' => str_replace('.', ':', hl(OpHours::open())), 'closes' => str_replace('.', ':', hl(OpHours::close()))]],
         'sameAs' => ['https://instagram.com/'.$biz['instagram'], 'https://www.tiktok.com/@'.$biz['tiktok'], $biz['facebook_url']],
     ];
+    // Extra structured data: breadcrumbs (pass 'breadcrumbs' => [[name, url], ...] after Beranda) and one page schema ('schema' => [...]).
+    $schemas = [$ld];
+    if (! empty($breadcrumbs)) {
+        $schemas[] = ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => collect([['Beranda', route('home')], ...$breadcrumbs])->values()
+            ->map(fn ($c, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $c[0], 'item' => $c[1]])->all()];
+    }
+    if (! empty($schema)) {
+        $schemas[] = $schema;
+    }
+    $ogImageUrl = $ogImage ?? asset('images/og-default.jpg');
 @endphp
 <!doctype html>
 <html lang="id">
@@ -27,7 +37,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title }}</title>
     <meta name="description" content="{{ $description }}">
-    <meta name="robots" content="{{ ($noindex ?? false) ? 'noindex, nofollow' : 'index, follow' }}">
+    <meta name="robots" content="{{ ($noindex ?? false) ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' }}">
+    @if(config('dmk.seo.google_verification'))<meta name="google-site-verification" content="{{ config('dmk.seo.google_verification') }}">@endif
+    @if(config('dmk.seo.bing_verification'))<meta name="msvalidate.01" content="{{ config('dmk.seo.bing_verification') }}">@endif
     <link rel="canonical" href="{{ $canonical ?? url()->current() }}">
     <meta name="theme-color" content="#0a0907">
     <meta property="og:type" content="website">
@@ -36,10 +48,16 @@
     <meta property="og:title" content="{{ $title }}">
     <meta property="og:description" content="{{ $description }}">
     <meta property="og:url" content="{{ $canonical ?? url()->current() }}">
-    <meta property="og:image" content="{{ $ogImage ?? asset('images/logo-full.webp') }}">
+    <meta property="og:image" content="{{ $ogImageUrl }}">
+    @unless(isset($ogImage))<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">@endunless
+    <meta property="og:image:alt" content="{{ $title }}">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $title }}">
+    <meta name="twitter:description" content="{{ $description }}">
+    <meta name="twitter:image" content="{{ $ogImageUrl }}">
     <link rel="icon" type="image/webp" href="{{ asset('images/logo-mark.webp') }}">
-    <script type="application/ld+json">{!! json_encode($ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
+    @foreach($schemas as $s)<script type="application/ld+json">{!! json_encode($s, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
+    @endforeach
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.analytics')
 </head>

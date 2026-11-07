@@ -1,4 +1,4 @@
-@extends('layouts.public', ['nav' => 'promo', 'title' => 'Promo | DM Karaoke & Cafe', 'description' => 'Promo karaoke yang sedang berlangsung di DM Karaoke & Cafe Rawalo, Banyumas.'])
+@extends('layouts.public', ['nav' => 'promo', 'title' => 'Promo Karaoke Rawalo Banyumas | DM Karaoke & Cafe', 'description' => 'Lihat promo karaoke yang sedang berjalan dan yang akan datang di DM Karaoke & Cafe Rawalo, Banyumas. Harga promo otomatis terpasang saat reservasi.', 'breadcrumbs' => [['Promo', route('promo')]]])
 
 @section('content')
 <x-page-head crumb="Promo" eyebrow="Promo" title="Promo yang <em>sedang berjalan</em>" lead="Harga promo otomatis terpasang saat kamu memilih jadwal reservasi." />

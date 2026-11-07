@@ -1,7 +1,8 @@
 @extends('layouts.public', [
     'nav' => 'harga',
-    'title' => 'Daftar Harga | DM Karaoke & Cafe',
-    'description' => 'Daftar harga paket Standard, VIP, dan Master Room serta tarif sewa ruangan per jam di DM Karaoke & Cafe Rawalo, Banyumas.',
+    'title' => 'Harga Karaoke per Jam & Paket | DM Karaoke Rawalo',
+    'description' => 'Daftar harga sewa ruang karaoke per jam dan paket Standard, VIP, Master Room di DM Karaoke & Cafe Rawalo, Banyumas. Tarif siang dan malam, deposit, promo.',
+    'breadcrumbs' => [['Harga', route('harga')]],
 ])
 
 @php

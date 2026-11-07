@@ -24,6 +24,12 @@ return [
         'facebook_url' => 'https://www.facebook.com/share/14vSn3oSKq6/',
     ],
 
+    // Search engine verification codes (the content="" of the meta tag from Search Console / Bing Webmaster), set in .env.
+    'seo' => [
+        'google_verification' => env('GOOGLE_SITE_VERIFICATION'),
+        'bing_verification' => env('BING_SITE_VERIFICATION'),
+    ],
+
     // Permissions per role (SRS §2 and §6.2). Every role can open the dashboard;
     // its widgets are filtered by the remaining permissions.
     'roles' => [

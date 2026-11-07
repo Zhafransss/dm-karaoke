@@ -1,4 +1,4 @@
-@extends('layouts.public', ['nav' => 'event', 'title' => 'Event | DM Karaoke & Cafe', 'description' => 'Jadwal event dan acara seru di DM Karaoke & Cafe Rawalo, Banyumas.'])
+@extends('layouts.public', ['nav' => 'event', 'title' => 'Event & Acara Seru | DM Karaoke & Cafe Rawalo', 'description' => 'Jadwal event, malam akustik, dan acara spesial di DM Karaoke & Cafe Rawalo, Banyumas. Lihat tanggal, jam, dan detail acaranya.', 'breadcrumbs' => [['Event', route('event')]]])
 
 @section('content')
 <x-page-head crumb="Event" eyebrow="Event" title="Acara di <em>DM Karaoke</em>" lead="Malam akustik, perayaan, dan acara spesial bersama tamu kami." />

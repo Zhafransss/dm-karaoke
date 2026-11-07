@@ -1,4 +1,8 @@
-@extends('layouts.public', ['nav' => 'home'])
+@extends('layouts.public', [
+    'nav' => 'home',
+    'title' => 'Karaoke di Rawalo, Banyumas | DM Karaoke & Cafe',
+    'description' => 'Ruang karaoke privat dan cafe di Rawalo, Banyumas. Sewa per jam atau paket, cek jam kosong lalu reservasi online di DM Karaoke & Cafe.',
+])
 
 @php
     use App\Support\OpHours;

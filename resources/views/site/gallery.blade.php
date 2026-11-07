@@ -1,4 +1,4 @@
-@extends('layouts.public', ['nav' => 'galeri', 'title' => 'Galeri | DM Karaoke & Cafe Rawalo', 'description' => 'Foto ruangan karaoke, suasana, event, dan cafe DM Karaoke & Cafe di Rawalo, Banyumas.'])
+@extends('layouts.public', ['nav' => 'galeri', 'title' => 'Galeri Foto & Video | DM Karaoke & Cafe Rawalo', 'description' => 'Foto dan video ruang karaoke, suasana, event, dan cafe DM Karaoke & Cafe di Rawalo, Banyumas. Intip suasananya sebelum datang.', 'breadcrumbs' => [['Galeri', route('galeri')]]])
 
 @php($lb = $items->map(fn ($g) => ['type' => $g->type, 'src' => $g->mediaUrl(), 'caption' => $g->caption, 'cat' => $g->category])->values())
 

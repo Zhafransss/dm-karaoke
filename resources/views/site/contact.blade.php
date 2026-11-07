@@ -1,4 +1,4 @@
-@extends('layouts.public', ['nav' => 'kontak', 'title' => 'Kontak & Lokasi | DM Karaoke & Cafe', 'description' => 'Alamat, peta, dan nomor WhatsApp DM Karaoke & Cafe. Kirim pesan dan saran untuk kami.'])
+@extends('layouts.public', ['nav' => 'kontak', 'title' => 'Kontak & Lokasi Karaoke di Rawalo | DM Karaoke & Cafe', 'description' => 'Alamat Jl. Raya Margasana, Menganti, Rawalo, Banyumas. Peta lokasi, jam buka, WhatsApp, dan form pesan DM Karaoke & Cafe.', 'breadcrumbs' => [['Kontak', route('kontak')]]])
 
 @php
     use App\Support\OpHours;

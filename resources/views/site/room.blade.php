@@ -1,7 +1,9 @@
 @extends('layouts.public', [
     'nav' => 'harga',
-    'title' => $t->name.' | DM Karaoke & Cafe Rawalo',
-    'description' => $t->description ?: 'Foto, video, fasilitas, dan harga '.$t->name.' di DM Karaoke & Cafe, Rawalo, Banyumas.',
+    'title' => $t->name.' – Ruang Karaoke Rawalo | DM Karaoke & Cafe',
+    'description' => \App\Support\Seo::roomDescription($t),
+    'breadcrumbs' => [[$t->name, route('ruangan.show', $t->slug)]],
+    'schema' => \App\Support\Seo::roomSchema($t),
     'ogImage' => $t->image ? upload_url($t->image) : null,
 ])
 

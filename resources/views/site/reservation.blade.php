@@ -1,7 +1,8 @@
 @extends('layouts.public', [
     'nav' => 'reservasi',
-    'title' => 'Jadwal & Reservasi | DM Karaoke & Cafe',
-    'description' => 'Cek jadwal ruangan kosong dan reservasi karaoke online di DM Karaoke & Cafe Rawalo, Banyumas.',
+    'title' => 'Reservasi Karaoke Online | DM Karaoke & Cafe Rawalo',
+    'description' => 'Cek jadwal ruang karaoke yang kosong dan reservasi online di DM Karaoke & Cafe Rawalo, Banyumas. Pilih tanggal, ruangan, dan jam dalam beberapa langkah.',
+    'breadcrumbs' => [['Reservasi', route('reservasi')]],
 ])
 
 @php
