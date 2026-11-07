@@ -75,11 +75,11 @@
 
                 <div class="mt-8" aria-live="polite" x-show="grid.length" x-cloak>
                     <h3 class="m-0 mb-1 font-display text-[24px] leading-7 font-semibold">Promo aktif di tanggal ini</h3>
-                    <p class="m-0 mb-3 caption" x-show="promos.length">Ketuk promo untuk memakainya, lalu tinggal pilih jam.</p>
+                    <p class="m-0 mb-3 caption" x-show="promos.length">Ketuk promo untuk memakainya, lalu tinggal pilih jam. Satu reservasi memakai satu promo; bila kamu tidak memilih, yang paling hemat otomatis dipakai.</p>
                     <p class="m-0 caption" x-show="!promos.length">Tidak ada promo yang berlaku di tanggal ini.</p>
                     <div class="flex flex-col gap-3" x-show="promos.length">
                         <template x-for="p in promos" :key="p.id">
-                            <article class="grid gap-3 md:gap-6 md:grid-cols-[112px_minmax(0,1fr)] items-center p-4 bg-surface-raised border rounded-md cursor-pointer transition-colors hover:border-gold-deep" :class="promoFits(p) ? 'border-gold' : 'border-line'"
+                            <article class="grid gap-3 md:gap-6 md:grid-cols-[112px_minmax(0,1fr)] items-center p-4 border rounded-md cursor-pointer transition-colors hover:border-gold-deep" :class="[promoFits(p) ? 'border-gold' : 'border-line', quote?.promo_id === p.id ? 'bg-gold-soft' : 'bg-surface-raised']"
                                 role="button" tabindex="0" :aria-label="`Pakai promo ${p.name}`"
                                 @click="applyPromo(p)" @keydown.enter.prevent="applyPromo(p)" @keydown.space.prevent="applyPromo(p)">
                                 <div class="flex md:flex-col items-center md:justify-center gap-3 md:gap-1 md:w-[112px] md:h-24 px-4 py-3 md:p-1.5 bg-gold-soft border border-gold-deep rounded-sm text-center">
@@ -90,7 +90,8 @@
                                     <div class="flex flex-wrap items-center gap-2">
                                         <h4 class="m-0 font-display text-2xl leading-7 font-semibold text-ink" x-text="p.name"></h4>
                                         <span class="badge badge-dot" :class="p.state === 'berjalan' ? 'badge-success' : 'badge-gold'" x-text="p.state === 'berjalan' ? 'Berjalan' : 'Terjadwal'"></span>
-                                        <span class="badge badge-gold" x-show="promoFits(p)">Berlaku untuk pilihanmu</span>
+                                        <span class="badge badge-success badge-dot" x-show="quote?.promo_id === p.id">Dipakai</span>
+                                        <span class="badge badge-gold" x-show="promoFits(p) && quote?.promo_id !== p.id">Berlaku untuk pilihanmu</span>
                                     </div>
                                     <p class="mt-1.5 mb-0 text-[13px] leading-5 text-ink-subtle" x-text="`${p.for} · ${p.period}`"></p>
                                     <p class="mt-1 mb-0 text-sm leading-[22px] text-ink-muted" x-text="p.text"></p>
@@ -183,20 +184,6 @@
                                 <p class="notice notice-info mt-3 mb-0" x-show="quote.pay_note" x-text="quote.pay_note"></p>
                                 <p class="notice notice-info mt-3 mb-0" x-show="quote.promo_id">Promo dapat diterapkan ketika pelanggan dapat menunjukkan KTP pada kasir ketika pembayaran.</p>
                             </div>
-                        </template>
-                        <template x-if="quote && quote.promos.length > 1">
-                            <fieldset class="mt-4 border-0 p-0 min-w-0">
-                                <legend class="label mb-1">Pilih promo</legend>
-                                <p class="caption m-0 mb-2">Ada beberapa promo untuk pilihanmu. Satu reservasi memakai satu promo; yang paling hemat sudah dipilih.</p>
-                                <div class="flex flex-col gap-1.5">
-                                    <template x-for="o in quote.promos" :key="o.id">
-                                        <label class="check justify-between gap-3">
-                                            <span class="flex items-center gap-2 min-w-0"><input type="radio" name="promo_choice" :value="o.id" :checked="quote.promo_id === o.id" @change="choosePromo(o.id)"> <span x-text="o.name + (o.note ? ` (${o.note})` : '')"></span></span>
-                                            <b class="text-gold whitespace-nowrap" x-text="o.amount"></b>
-                                        </label>
-                                    </template>
-                                </div>
-                            </fieldset>
                         </template>
                         <p class="notice" x-show="hour === null && starts.length" x-cloak>Tidak ada jam yang tersedia untuk pilihan ini di tanggal tersebut. Pilih tanggal atau pilihan lain.</p>
                     </div>

@@ -40,9 +40,8 @@ class QuotePresenter
             'when' => tgl($date).' · '.OpHours::range($hour, $q['hours']).'. '.($type?->paymentNote() ?? 'Dibayar di tempat.'),
             'lc_note' => $freeLc && $type && ! $type->prepaid ? $type->depositText().' Deposit tidak termasuk total.' : '',
             'pay_note' => $type?->prepaid ? "{$type->name} wajib lunas di awal (tanpa deposit). Jadwalmu dikonfirmasi admin setelah pembayaran lunas." : '',
-            // The applied promo and every promo the guest may switch to (one per reservation).
+            // The applied promo (one per reservation), marked on the promo cards.
             'promo_id' => $q['promo_id'],
-            'promos' => array_map(fn ($o) => ['id' => $o['id'], 'name' => $o['name'], 'amount' => '−'.rp($o['discount']), 'note' => $o['note']], $q['promo_options'] ?? []),
         ];
     }
 }

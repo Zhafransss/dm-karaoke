@@ -127,11 +127,7 @@ Alpine.data('reservationForm', (cfg) => ({
             this.loading = false;
         }
     },
-    /* One promo per reservation. promoId is the guest's pick; the server falls back to the biggest discount when it does not apply. */
-    choosePromo(id) {
-        this.promoId = id;
-        this.price();
-    },
+    /* One promo per reservation. promoId is the promo card the guest tapped; the server falls back to the biggest discount when it does not apply. */
     async price() {
         if (this.hour === null) { this.quote = null; return; }
         const { ok, data } = await postJson(cfg.urls.price, {

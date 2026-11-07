@@ -240,7 +240,6 @@ class ReservationFlowTest extends TestCase
 
         $auto = $this->postJson('/reservasi/harga', $ask)->assertOk();
         $this->assertSame($four->id, $auto->json('promo_id'));
-        $this->assertSame([$four->id, $three->id], array_column($auto->json('promos'), 'id'));
 
         $picked = $this->postJson('/reservasi/harga', [...$ask, 'promo_id' => $three->id])->assertOk();
         $this->assertSame($three->id, $picked->json('promo_id'));
