@@ -229,6 +229,15 @@ class PricingServiceTest extends TestCase
         $this->assertCount(0, app(PromoService::class)->overlaps($new));
     }
 
+    public function test_ktp_notice_only_for_birthday_promos(): void
+    {
+        $this->assertStringContainsString('KTP', QuotePresenter::promoNotice('Promo Ulang Tahun'));
+        $this->assertStringContainsString('KTP', QuotePresenter::promoNotice('Diskon ULANG  TAHUN VIP'));
+        $this->assertSame('', QuotePresenter::promoNotice('Sewa 3 Jam Bayar 2 Jam'));
+        $this->assertSame('', QuotePresenter::promoNotice('Promo Akhir Tahun'));
+        $this->assertSame('', QuotePresenter::promoNotice(null));
+    }
+
     public function test_promo_row_does_not_repeat_the_word_promo(): void
     {
         $label = fn (string $name) => collect(QuotePresenter::rows([], 'sewa', $name, null, 10000))->firstWhere('discount', true)['text'];

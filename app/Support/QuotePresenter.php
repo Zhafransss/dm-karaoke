@@ -42,6 +42,15 @@ class QuotePresenter
             'pay_note' => $type?->prepaid ? "{$type->name} wajib lunas di awal (tanpa deposit). Jadwalmu dikonfirmasi admin setelah pembayaran lunas." : '',
             // The applied promo (one per reservation), marked on the promo cards.
             'promo_id' => $q['promo_id'],
+            'promo_notice' => self::promoNotice($q['promo_name']),
         ];
+    }
+
+    /** Birthday promos have no flag of their own, so they are recognised by name (like the "Promo" prefix above). */
+    public static function promoNotice(?string $promoName): string
+    {
+        return $promoName && preg_match('/ulang\s+tahun/iu', $promoName)
+            ? 'Promo dapat diterapkan ketika pelanggan dapat menunjukkan KTP pada kasir ketika pembayaran. Pastikan datang ketika hari ulang tahun anda ya'
+            : '';
     }
 }
