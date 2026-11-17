@@ -43,6 +43,7 @@
     <link rel="canonical" href="{{ $canonical ?? url()->current() }}">
     <meta name="theme-color" content="#0a0907">
     <meta property="og:type" content="website">
+    <meta name="google-site-verification" content="MxvOcCZYjn2j13vB7pMeVbmQ6WBjlf_Th515kAonqUY" />
     <meta property="og:locale" content="id_ID">
     <meta property="og:site_name" content="{{ $biz['name'] }}">
     <meta property="og:title" content="{{ $title }}">
